@@ -1,0 +1,70 @@
+{
+  "projectType": "saas",
+  "projectName": "Pagosapp",
+  "projectDescription": "A payment management application for tracking and managing monthly and annual payments with due dates and payment status",
+  "theme": "almond",
+  "primaryColor": "#7abf7a",
+  "lightColor": "#accfb4",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Core Features",
+            "pages": ["features/payment-tracking", "features/due-dates", "features/custom-payments", "features/month-navigation"]
+          },
+          {
+            "group": "User Guide",
+            "pages": ["guide/managing-payments", "guide/payment-categories", "guide/local-storage"]
+          },
+          {
+            "group": "Development",
+            "pages": ["development/architecture", "development/components", "development/state-management"]
+          }
+        ]
+      },
+      {
+        "tab": "Components",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["components/overview"]
+          },
+          {
+            "group": "Core Components",
+            "pages": ["components/pago", "components/mes", "components/date-picker", "components/switch"]
+          },
+          {
+            "group": "Modals",
+            "pages": ["components/add-new-item", "components/payment-modal"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Monthly and specific-month payment tracking",
+    "Visual status indicators (paid, due soon, overdue)",
+    "Due date management with date picker",
+    "Custom payment creation and removal",
+    "Local storage persistence",
+    "Month-by-month navigation",
+    "Payment status toggle"
+  ],
+  "publicApiSurface": [
+    "usePago - Custom hook for payment state management",
+    "useItems - Context hook for items management",
+    "ItemsProvider - Global state provider",
+    "calculateDateDifference - Date utility function",
+    "Pago - Payment item component",
+    "Mes - Month view component",
+    "AddNewItemModal - Modal for adding payments",
+    "PaymentModal - Modal for payment details"
+  ]
+}
