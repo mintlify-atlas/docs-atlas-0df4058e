@@ -1,0 +1,360 @@
+---
+title: 'State Management'
+description: 'State management architecture using React Context API'
+---
+
+## Overview
+
+Pagosapp uses React's Context API for global state management, with localStorage for persistence. The state architecture is simple yet effective, avoiding the complexity of external state management libraries.
+
+## ItemsContext
+
+**Location**: `src/states/ItemsContext.jsx`
+
+The central state management system for all payment items.
+
+### Context Creation
+
+```jsx
+import { useState, createContext, useContext, useEffect } from 'react'
+import paymentsConstants from '../constants/payments.constants'
+
+export const ItemsContext = createContext()
+
+export const useItems = () => {
+  return useContext(ItemsContext)
+}
+```
+
+### Provider Implementation
+
+```jsx
+const ItemsProvider = ({ children }) => {
+  const [items, setItems] = useState(
+    localStorage.getItem('items') 
+      ? JSON.parse(localStorage.getItem('items')) 
+      : paymentsConstants
+  )
+
+  useEffect(() => {
+    localStorage.setItem('items', JSON.stringify(items))
+  }, [items])
+
+  const addItem = (item) => {
+    const newItem = { ...item }
+
+    if (item.meses.includes('mensual')) {
+      newItem.mensual = true
+      newItem.meses = []
+    } else {
+      newItem.mensual = false
+    }
+
+    setItems([...items, newItem])
+  }
+
+  const removeItem = (item) => {
+    setItems(items.filter(i => i !== item))
+  }
+
+  return (
+    <ItemsContext.Provider value={{ items, addItem, removeItem }}>
+      {children}
+    </ItemsContext.Provider>
+  )
+}
+
+export default ItemsProvider
+```
+
+### State Structure
+
+Each payment item has the following shape:
+
+```typescript
+type PaymentItem = {
+  nombre: string        // Payment name (e.g., "Netflix")
+  mensual: boolean      // true if payment occurs every month
+  meses?: string[]      // Array of specific months if not mensual
+}
+```
+
+**Example items**:
+
+```javascript
+// Monthly payment
+{
+  nombre: 'Netflix',
+  mensual: true
+}
+
+// Specific months
+{
+  nombre: 'Patente',
+  mensual: false,
+  meses: ['Enero']
+}
+
+// Multiple specific months
+{
+  nombre: 'Contribución Mdeo',
+  mensual: false,
+  meses: ['Marzo', 'Julio', 'Noviembre']
+}
+```
+
+### Context API Methods
+
+#### addItem(item)
+
+Adds a new payment item to the collection:
+
+```jsx
+const { addItem } = useItems()
+
+addItem({
+  nombre: 'New Payment',
+  meses: ['Enero', 'Febrero']
+})
+```
+
+**Logic**:
+- Creates a copy of the item
+- If `meses` contains 'mensual', sets `mensual: true` and clears `meses`
+- Otherwise, sets `mensual: false`
+- Appends to items array
+
+#### removeItem(item)
+
+Removes a payment item from the collection:
+
+```jsx
+const { removeItem } = useItems()
+
+removeItem(paymentItem)
+```
+
+**Note**: Currently removes by object reference. Consider using ID-based removal for better reliability.
+
+### Data Persistence
+
+Automatic synchronization with localStorage:
+
+```jsx
+useEffect(() => {
+  localStorage.setItem('items', JSON.stringify(items))
+}, [items])
+```
+
+**Behavior**:
+- Every state change triggers localStorage update
+- On mount, loads from localStorage or falls back to `paymentsConstants`
+- Data persists across browser sessions
+
+## usePago Hook
+
+**Location**: `src/logic/usePago.js`
+
+Custom hook for managing individual payment state:
+
+```javascript
+export function usePago (pago, mes) {
+  const [checked, setChecked] = useState(
+    localStorage.getItem(`checked-${mes}-${pago.nombre}`) === 'true'
+  )
+  
+  const [startDate, setStartDate] = useState(
+    localStorage.getItem(`startDate-${mes}-${pago.nombre}`) 
+      ? new Date(localStorage.getItem(`startDate-${mes}-${pago.nombre}`))
+      : null
+  )
+  
+  const [openDatePicker, setOpenDatePicker] = useState(false)
+  
+  const [paymentDate, setPaymentDate] = useState(
+    localStorage.getItem(`paymentDate-${mes}-${pago.nombre}`)
+      ? new Date(localStorage.getItem(`paymentDate-${mes}-${pago.nombre}`))
+      : null
+  )
+
+  const handleChange = (checked) => {
+    setChecked(checked)
+    localStorage.setItem(`checked-${mes}-${pago.nombre}`, checked)
+  }
+
+  const handleDateChange = (date) => {
+    setStartDate(date)
+    localStorage.setItem(`startDate-${mes}-${pago.nombre}`, date.toISOString())
+    setOpenDatePicker(false)
+  }
+
+  const handleChangePaymentDate = (date) => {
+    setPaymentDate(date)
+    localStorage.setItem(`paymentDate-${mes}-${pago.nombre}`, date.toISOString())
+    setOpenDatePicker(false)
+  }
+
+  const dateDifference = calculateDateDifference(startDate)
+
+  return { 
+    checked, 
+    startDate, 
+    openDatePicker, 
+    handleChange, 
+    handleDateChange, 
+    dateDifference, 
+    setOpenDatePicker, 
+    paymentDate, 
+    handleChangePaymentDate 
+  }
+}
+```
+
+### State Keys
+
+Per-payment, per-month state stored in localStorage:
+
+- `checked-{mes}-{nombre}`: Boolean string, payment completion status
+- `startDate-{mes}-{nombre}`: ISO date string, due date
+- `paymentDate-{mes}-{nombre}`: ISO date string, actual payment date
+
+**Example keys**:
+```
+checked-Enero-Netflix = "true"
+startDate-Enero-Netflix = "2026-01-15T00:00:00.000Z"
+paymentDate-Enero-Netflix = "2026-01-14T10:30:00.000Z"
+```
+
+### Computed Values
+
+#### dateDifference
+
+Calculates days until due date:
+
+```javascript
+const dateDifference = calculateDateDifference(startDate)
+```
+
+**Implementation** (`src/utils/dateUtils.js`):
+
+```javascript
+export const calculateDateDifference = (startDate) => {
+  const now = new Date()
+  const start = new Date(startDate)
+  const diffTime = start - now
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+}
+```
+
+**Return values**:
+- Positive number: Days until due date
+- Negative number: Days overdue
+- Used for color coding in UI
+
+## Default Data
+
+**Location**: `src/constants/payments.constants.js`
+
+Initial payment items loaded on first run:
+
+```javascript
+export default [
+  {
+    nombre: 'Patente',
+    mensual: false,
+    meses: ['Enero']
+  },
+  {
+    nombre: 'Universidad',
+    mensual: true
+  },
+  // ... more items
+]
+```
+
+**Usage**:
+- Loaded when localStorage is empty
+- Provides sensible defaults for first-time users
+- Can be customized by modifying this file
+
+## State Flow Diagram
+
+```
+┌─────────────────────────────────────────┐
+│  localStorage (Persistent Storage)      │
+│  - items: PaymentItem[]                 │
+│  - checked-{mes}-{nombre}: boolean      │
+│  - startDate-{mes}-{nombre}: Date       │
+│  - paymentDate-{mes}-{nombre}: Date     │
+└──────────────┬──────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────┐
+│  ItemsContext (Global State)            │
+│  - items: PaymentItem[]                 │
+│  - addItem(item)                        │
+│  - removeItem(item)                     │
+└──────────────┬──────────────────────────┘
+               │
+               ↓
+┌─────────────────────────────────────────┐
+│  useItems() hook                        │
+│  Accessed by: App, AddNewItemModal      │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  usePago(pago, mes) hook                │
+│  - Per-payment state management         │
+│  - Accessed by: Pago component          │
+└─────────────────────────────────────────┘
+```
+
+## Best Practices
+
+### Consuming Context
+
+Always use the `useItems` hook instead of `useContext(ItemsContext)`:
+
+```jsx
+// ✅ Good
+import { useItems } from '../states/ItemsContext'
+const { items, addItem } = useItems()
+
+// ❌ Avoid
+import { useContext } from 'react'
+import { ItemsContext } from '../states/ItemsContext'
+const { items, addItem } = useContext(ItemsContext)
+```
+
+### State Updates
+
+Always create new arrays/objects for immutability:
+
+```jsx
+// ✅ Good
+setItems([...items, newItem])
+
+// ❌ Bad - mutates state
+items.push(newItem)
+setItems(items)
+```
+
+### localStorage Keys
+
+Use consistent naming convention:
+
+```javascript
+const key = `${type}-${mes}-${pago.nombre}`
+localStorage.setItem(key, value)
+```
+
+## Potential Improvements
+
+1. **Add unique IDs**: Use UUIDs instead of object references for removal
+2. **Optimize localStorage**: Debounce writes to reduce I/O
+3. **Type safety**: Add TypeScript for better type checking
+4. **State normalization**: Use normalized state shape for better performance
+5. **Action creators**: Centralize state update logic
+6. **IndexedDB**: For handling larger datasets
+7. **State persistence library**: Consider redux-persist or zustand for more robust persistence

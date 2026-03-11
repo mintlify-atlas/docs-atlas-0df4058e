@@ -1,0 +1,168 @@
+---
+title: 'AddNewItemModal'
+description: 'Modal component for adding new payment items with name and month selection'
+---
+
+## Overview
+
+The `AddNewItemModal` component provides a user interface for adding new payment items to the system. It allows users to specify a payment name and select which months the payment applies to, with support for both one-time and recurring monthly payments.
+
+## Component Location
+
+`src/components/modals/AddNewItemModal.jsx`
+
+## Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `isOpen` | boolean | Yes | Controls the modal visibility state |
+| `onClose` | function | Yes | Callback function to close the modal |
+
+## Features
+
+### Form Validation
+
+The component implements client-side validation:
+
+- **Name validation**: Payment name cannot be empty
+- **Month selection validation**: At least one month must be selected
+- **Real-time error clearing**: Errors are cleared when the user starts typing
+
+### Month Selection Modes
+
+The component supports two distinct modes:
+
+1. **Monthly (Recurring)**: When "Mensual" is selected, the payment applies to all months automatically
+2. **Specific Months**: Users can select individual months (Enero through Diciembre)
+
+When "Mensual" is checked, all individual month checkboxes become disabled to prevent conflicting selections.
+
+## State Management
+
+The component manages three key state values:
+
+```jsx
+const [nombre, setName] = useState('')        // Payment name
+const [meses, setMeses] = useState([])        // Selected months array
+const [error, setError] = useState('')        // Validation error message
+```
+
+## Context Integration
+
+The modal integrates with the `ItemsContext` to add new items to the global state:
+
+```jsx
+const { addItem } = useItems()
+```
+
+When saving, the item is added with the structure:
+```jsx
+{ nombre: string, meses: string | array }
+```
+
+## Usage Example
+
+```jsx
+import { useDisclosure } from '@chakra-ui/react'
+import NewItemModal from './components/modals/AddNewItemModal'
+
+function PaymentManager() {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  return (
+    <>
+      <Button onClick={onOpen}>Add New Payment</Button>
+      <NewItemModal isOpen={isOpen} onClose={onClose} />
+    </>
+  )
+}
+```
+
+## Workflow
+
+1. **Open Modal**: User clicks a trigger button to open the modal
+2. **Enter Name**: User types the payment name in the input field
+3. **Select Months**: User chooses either:
+   - "Mensual" checkbox for recurring monthly payments
+   - Individual month checkboxes for specific months
+4. **Validation**: On save, the component validates:
+   - Name is not empty
+   - At least one month is selected
+5. **Save**: If validation passes:
+   - Item is added to context via `addItem()`
+   - Modal closes automatically
+   - Form resets for next use
+6. **Cancel**: User can close the modal without saving
+
+## Month Handling Logic
+
+The `handleMonthChange` function manages month selection:
+
+```jsx
+const handleMonthChange = (e) => {
+  const value = e.target.value
+  if (value === 'mensual') {
+    if (e.target.checked) {
+      setMeses('mensual')  // Set to string for monthly
+    } else {
+      setMeses([])         // Clear selection
+    }
+  } else {
+    if (e.target.checked) {
+      // Add month, replacing 'mensual' if present
+      setMeses(prev => prev.includes('mensual') ? [value] : [...prev, value])
+    } else {
+      // Remove specific month
+      setMeses(prev => prev.filter(m => m !== value))
+    }
+  }
+}
+```
+
+## Error Handling
+
+Errors are displayed below the form when validation fails:
+
+```jsx
+{(!nombre.trim() || !meses.length) && error && (
+  <Text color='red.500' mt={2}>{error}</Text>
+)}
+```
+
+Possible error messages:
+- "El nombre no puede estar vacío." (Name cannot be empty)
+- "Debes seleccionar al menos un mes." (You must select at least one month)
+
+## UI Components
+
+The modal uses Chakra UI components:
+
+- `Modal`, `ModalOverlay`, `ModalContent` - Modal structure
+- `ModalHeader`, `ModalBody`, `ModalFooter` - Content sections
+- `ModalCloseButton` - Close button in header
+- `FormControl`, `FormLabel`, `Input` - Form elements
+- `Menu`, `MenuButton`, `MenuList`, `MenuItem` - Month selection dropdown
+- `Checkbox` - Month selection checkboxes
+- `Button` - Action buttons (Save/Close)
+
+## Accessibility
+
+The component includes:
+- Form control validation states
+- Disabled state for conflicting month selections
+- Centered modal positioning (`isCentered`)
+- Close button for keyboard navigation
+- Scrollable month list for better usability
+
+## Data Flow
+
+```
+User Input → Local State → Validation → ItemsContext → localStorage
+```
+
+When an item is successfully added:
+1. Local component state captures form data
+2. Validation runs on save
+3. `addItem()` is called from ItemsContext
+4. Context processes the item (converts 'mensual' to boolean flag)
+5. Item is stored in localStorage via ItemsContext effect

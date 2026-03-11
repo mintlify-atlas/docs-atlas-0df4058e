@@ -1,0 +1,226 @@
+---
+title: 'Due Dates Management'
+description: 'Set and manage payment due dates to track upcoming obligations and avoid late payments'
+icon: 'calendar-days'
+---
+
+## Overview
+
+Due dates are essential for effective payment tracking in Pagosapp. By setting due dates for your payments, you enable the automatic status calculation system that alerts you when payments are due soon or overdue.
+
+## Setting a Due Date
+
+To set a due date for a payment:
+
+<Steps>
+  <Step title="Locate the Payment">
+    Find the payment in the month view where you want to set the due date.
+  </Step>
+  
+  <Step title="Open Date Picker">
+    Click the pencil icon (edit button) next to the payment name to open the date picker.
+  </Step>
+  
+  <Step title="Select Date">
+    Choose the due date from the calendar interface. The date picker will close automatically after selection.
+  </Step>
+  
+  <Step title="Verify Status">
+    The payment color will update immediately based on how many days remain until the due date.
+  </Step>
+</Steps>
+
+## Date Picker Component
+
+The date picker is implemented using `react-datepicker` in `src/components/DatePickerElement.jsx:5-19`:
+
+```jsx
+export function DatePickerElement ({ startDate, handleDateChange, openDatePicker, setOpenDatePicker }) {
+  return (
+    <div style={{ position: 'absolute' }}>
+      <DatePicker
+        selected={startDate}
+        onChange={handleDateChange}
+        open={openDatePicker}
+        onCalendarClose={() => setOpenDatePicker(false)}
+        onCalendarOpen={() => setOpenDatePicker(true)}
+        onClickOutside={() => setOpenDatePicker(false)}
+        customInput={<div />}
+      />
+    </div>
+  )
+}
+```
+
+## Date Storage
+
+Due dates are persisted in localStorage with the following structure:
+
+```javascript
+const [startDate, setStartDate] = useState(
+  localStorage.getItem(`startDate-${mes}-${pago.nombre}`) 
+    ? new Date(localStorage.getItem(`startDate-${mes}-${pago.nombre}`)) 
+    : null
+)
+```
+
+<Info>
+Due dates are stored per payment per month, allowing you to set different due dates for the same recurring payment in different months.
+</Info>
+
+## Date Difference Calculation
+
+The system calculates the number of days until the due date using `src/utils/dateUtils.js:1-7`:
+
+```javascript
+export const calculateDateDifference = (startDate) => {
+  const now = new Date()
+  const start = new Date(startDate)
+  const diffTime = start - now
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+}
+```
+
+### Understanding the Calculation
+
+- **Positive value**: Days remaining until due date
+- **Zero**: Due today
+- **Negative value**: Days overdue
+
+<CodeGroup>
+```javascript Example: 5 days remaining
+// If today is March 1 and due date is March 6
+dateDifference = 5  // Item shows gray (> 3 days)
+```
+
+```javascript Example: 2 days remaining
+// If today is March 1 and due date is March 3
+dateDifference = 2  // Item shows orange (<= 3 days)
+```
+
+```javascript Example: Overdue
+// If today is March 6 and due date was March 1
+dateDifference = -5  // Item shows red (< 0)
+```
+</CodeGroup>
+
+## Updating Due Dates
+
+You can update a due date at any time:
+
+1. Click the pencil icon next to the payment
+2. Select a new date from the calendar
+3. The status indicator will update immediately
+4. The new date is saved automatically
+
+```javascript
+const handleDateChange = (date) => {
+  setStartDate(date)
+  localStorage.setItem(`startDate-${mes}-${pago.nombre}`, date.toISOString())
+  setOpenDatePicker(false)
+}
+```
+
+## Status Indicator Thresholds
+
+The visual indicators are triggered based on these thresholds:
+
+<Card title="Status Thresholds" icon="chart-line">
+  - **More than 3 days away**: Gray indicator
+  - **3 days or less**: Orange indicator (due soon)
+  - **0 days or negative**: Red indicator (overdue)
+  - **Payment marked as complete**: Green indicator (regardless of date)
+</Card>
+
+## Due Date Display
+
+Due dates are displayed in two places:
+
+### 1. Payment List Item
+
+The `StartDateElement` component shows the due date next to each payment:
+
+```jsx
+<StartDateElement checked={checked} startDate={startDate} />
+```
+
+### 2. Payment Modal
+
+The payment details modal displays the due date in a formatted manner:
+
+```jsx
+<p>Fecha de vencimiento: {fechaVencimiento ? fechaVencimiento.toLocaleDateString() : 'No ingresada'}</p>
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Set Due Dates in Advance" icon="calendar-plus">
+    Set due dates as soon as you know them, preferably at the beginning of each month. This gives you maximum visibility into upcoming obligations.
+  </Accordion>
+
+  <Accordion title="Use Actual Due Dates" icon="calendar-check">
+    Always use the actual payment due date, not when you plan to pay. The 3-day warning gives you time to prepare the payment.
+  </Accordion>
+
+  <Accordion title="Update for Varying Dates" icon="calendar-days">
+    Some payments may have different due dates each month. Update these dates monthly to ensure accurate tracking.
+  </Accordion>
+
+  <Accordion title="Review Weekly" icon="calendar-week">
+    Check your payment dashboard at least weekly to stay informed about upcoming due dates and adjust your payment schedule accordingly.
+  </Accordion>
+</AccordionGroup>
+
+## Payment Date vs Due Date
+
+<Note>
+Pagosapp distinguishes between two types of dates:
+- **Due Date (Fecha de vencimiento)**: When the payment must be made
+- **Payment Date (Fecha de pago)**: When you actually made the payment
+
+The due date determines the status indicator, while the payment date is recorded for your records when you mark a payment as complete.
+</Note>
+
+## Common Scenarios
+
+<CardGroup cols={2}>
+  <Card title="Monthly Bills" icon="file-invoice-dollar">
+    Set the same due date each month (e.g., the 15th) for bills that are consistently due on that day.
+  </Card>
+  
+  <Card title="Quarterly Payments" icon="calendar-range">
+    Update due dates quarterly for payments that occur every few months, like property taxes or insurance.
+  </Card>
+  
+  <Card title="Annual Payments" icon="calendar">
+    Set the due date once per year for annual obligations like vehicle registration.
+  </Card>
+  
+  <Card title="Variable Due Dates" icon="calendar-circle-exclamation">
+    Update due dates monthly for bills with varying due dates, like credit cards with changing statement dates.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<Warning>
+If a payment is not showing the expected color:
+1. Verify the due date is set correctly
+2. Check that the current month is selected
+3. Ensure the payment hasn't been marked as complete
+4. Try refreshing the page if the status doesn't update
+</Warning>
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Payment Tracking" icon="check-circle" href="/features/payment-tracking">
+    Understand how payment statuses are tracked and displayed
+  </Card>
+  
+  <Card title="Month Navigation" icon="calendar" href="/features/month-navigation">
+    Learn how to navigate between months
+  </Card>
+</CardGroup>

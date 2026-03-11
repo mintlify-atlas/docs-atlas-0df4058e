@@ -1,0 +1,125 @@
+---
+title: 'Managing Payments'
+description: 'Learn how to add, track, and manage your monthly payments in Pagosapp'
+---
+
+## Overview
+
+Pagosapp helps you track and manage your monthly payments efficiently. The application displays your payments across multiple months with a color-coded status system to help you stay on top of your obligations.
+
+## Adding a New Payment
+
+To add a new payment to your tracking system:
+
+1. Click the **Add Payment** button in the header
+2. Enter a name for your payment (e.g., "Netflix", "Rent", "Electricity")
+3. Select the months when this payment applies:
+   - Choose **Mensual** (Monthly) if this payment occurs every month
+   - Or select specific months if the payment only occurs in certain months
+4. Click **Guardar** (Save) to add the payment
+
+<Note>
+When you select "Mensual", individual month selection will be disabled since the payment will automatically appear in all months.
+</Note>
+
+## Viewing Your Payments
+
+The main interface displays three months at a time, showing all your tracked payments for each month.
+
+### Navigation
+
+- Use the **Anterior** (Previous) button to view earlier months
+- Use the **Siguiente** (Next) button to view later months
+- The view starts at the current month by default
+
+### Payment Status Colors
+
+Each payment is color-coded based on its due date status:
+
+- **Green**: Payment has been marked as completed
+- **Red**: Payment is overdue (due date has passed)
+- **Orange**: Payment is due soon (within 3 days)
+- **Gray**: No due date set, or due date is more than 3 days away
+
+## Setting Due Dates
+
+For each payment in a specific month:
+
+1. Click the pencil icon next to the payment
+2. Select the due date from the calendar picker
+3. The date is automatically saved
+
+The due date determines when the payment needs to be made and affects the color-coding of the payment item.
+
+## Marking Payments as Completed
+
+To mark a payment as paid:
+
+1. Toggle the switch next to the payment name
+2. The payment will turn green to indicate completion
+3. The status is automatically saved
+
+<Tip>
+When you mark a payment as completed, you can optionally record the actual payment date by clicking on the payment item to open the details modal.
+</Tip>
+
+## Viewing Payment Details
+
+Click on any payment item to view its details in a modal:
+
+- **Payment name**: The identifier for this payment
+- **Fecha de vencimiento** (Due date): When the payment is due
+- **Fecha de pago** (Payment date): When you actually made the payment (only visible if marked as completed)
+
+You can edit the payment date using the pencil icon in the details modal.
+
+## Payment Workflow Example
+
+<Steps>
+  <Step title="Set up your payment">
+    Add a new payment like "Internet Bill" and set it to monthly
+  </Step>
+  <Step title="Set the due date">
+    Click the pencil icon and select the 15th of each month as the due date
+  </Step>
+  <Step title="Track the deadline">
+    The payment will turn orange when it's within 3 days of the due date, and red if it passes
+  </Step>
+  <Step title="Mark as paid">
+    When you make the payment, toggle the switch to mark it as complete
+  </Step>
+  <Step title="Record payment date">
+    Click the payment to open details and set the actual date you paid (optional)
+  </Step>
+</Steps>
+
+## Common Questions
+
+<AccordionGroup>
+  <Accordion title="Can I delete a payment?">
+    Currently, the application focuses on tracking and marking payments as complete. To effectively remove a payment from view, avoid setting due dates for months you don't need to track it.
+  </Accordion>
+  
+  <Accordion title="What happens to completed payments in the next month?">
+    Each month maintains its own completion status. If you have a monthly payment, you'll need to mark it as complete separately for each month.
+  </Accordion>
+  
+  <Accordion title="Can I edit a payment name or months after creating it?">
+    Payment modifications require using the browser's developer tools to access localStorage directly. For simpler management, it's recommended to use the Reset button and set up your payments again.
+  </Accordion>
+  
+  <Accordion title="What if I mark a payment as complete by accident?">
+    Simply toggle the switch again to unmark it. The completion status can be changed at any time.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Payment Categories" icon="tags" href="/guide/payment-categories">
+    Learn about monthly vs specific-month payment types
+  </Card>
+  <Card title="Local Storage" icon="database" href="/guide/local-storage">
+    Understand how your data is stored and managed
+  </Card>
+</CardGroup>

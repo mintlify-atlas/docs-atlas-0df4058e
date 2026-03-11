@@ -1,0 +1,252 @@
+---
+title: 'PaymentModal'
+description: 'Modal component for viewing and editing payment details including due dates and payment dates'
+---
+
+## Overview
+
+The `PaymentModal` component displays detailed information about a specific payment item. It shows the payment name, due date, and for completed payments, allows users to view and edit the payment date using an interactive date picker.
+
+## Component Location
+
+`src/components/modals/PaymentModal.jsx`
+
+## Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `isOpen` | boolean | Yes | Controls the modal visibility state |
+| `onClose` | function | Yes | Callback function to close the modal |
+| `paymentInfo` | object | Yes | Payment item object containing payment details |
+| `fechaVencimiento` | Date | No | Due date for the payment |
+| `mes` | string | Yes | Month identifier for the payment |
+| `checked` | boolean | Yes | Whether the payment has been marked as paid |
+
+## Payment Info Object Structure
+
+The `paymentInfo` prop expects an object with at least:
+
+```jsx
+{
+  nombre: string  // Payment name
+}
+```
+
+## Features
+
+### Date Display
+
+- **Due Date**: Always displayed, shows "No ingresada" (Not entered) if not set
+- **Payment Date**: Only displayed when `checked` is `true` (payment marked as completed)
+
+### Payment Date Editing
+
+When a payment is marked as paid (`checked={true}`):
+
+1. The payment date is displayed with an edit button (pencil icon)
+2. Clicking the edit button opens an inline date picker
+3. Selected date is saved to localStorage automatically
+4. Date picker closes after selection
+
+## Hook Integration
+
+The component uses the custom `usePago` hook to manage payment state:
+
+```jsx
+const { 
+  paymentDate,              // Current payment date from localStorage
+  openDatePicker,           // Date picker visibility state
+  setOpenDatePicker,        // Toggle date picker
+  handleChangePaymentDate   // Update payment date
+} = usePago(paymentInfo, mes)
+```
+
+### usePago Hook Functionality
+
+The `usePago` hook (from `src/logic/usePago.js`) provides:
+
+- **Persistent Storage**: Stores payment dates in localStorage with key pattern:
+  - `paymentDate-{mes}-{pago.nombre}`
+- **Date Management**: Handles date selection and updates
+- **State Synchronization**: Keeps UI in sync with localStorage
+
+## Usage Example
+
+```jsx
+import { useDisclosure } from '@chakra-ui/react'
+import PaymentModal from './components/modals/PaymentModal'
+
+function PaymentCard({ payment, month, isPaid }) {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const dueDate = new Date('2026-03-15')
+
+  return (
+    <>
+      <Card onClick={onOpen}>
+        <Text>{payment.nombre}</Text>
+      </Card>
+      
+      <PaymentModal
+        isOpen={isOpen}
+        onClose={onClose}
+        paymentInfo={payment}
+        fechaVencimiento={dueDate}
+        mes={month}
+        checked={isPaid}
+      />
+    </>
+  )
+}
+```
+
+## Workflow
+
+### Viewing Payment Details
+
+1. **Open Modal**: User clicks on a payment item
+2. **View Information**: Modal displays:
+   - Payment name in header
+   - Due date
+   - Payment date (if marked as paid)
+3. **Close**: User clicks close button or clicks outside modal
+
+### Editing Payment Date
+
+1. **Payment Must Be Checked**: Edit functionality only appears when `checked={true}`
+2. **Click Edit Icon**: User clicks the pencil icon next to payment date
+3. **Select Date**: Date picker appears inline
+4. **Save Date**: 
+   - Selected date is immediately saved to localStorage
+   - Date picker closes automatically
+   - Display updates with new date
+5. **Close Picker**: Click outside or select a date to close
+
+## Date Picker Component
+
+The modal uses the `DatePickerElement` component:
+
+```jsx
+<DatePickerElement 
+  startDate={paymentDate}
+  handleDateChange={handleChangePaymentDate}
+  openDatePicker={openDatePicker}
+  setOpenDatePicker={setOpenDatePicker}
+/>
+```
+
+Location: `src/components/DatePickerElement.jsx`
+
+## State Management
+
+State is managed through the `usePago` hook and localStorage:
+
+```jsx
+// Reading from localStorage
+const paymentDate = localStorage.getItem(`paymentDate-${mes}-${pago.nombre}`)
+  ? new Date(localStorage.getItem(`paymentDate-${mes}-${pago.nombre}`))
+  : null
+
+// Saving to localStorage
+const handleChangePaymentDate = (date) => {
+  setPaymentDate(date)
+  localStorage.setItem(`paymentDate-${mes}-${pago.nombre}`, date.toISOString())
+  setOpenDatePicker(false)
+}
+```
+
+## Conditional Rendering
+
+The payment date section only renders when the payment is marked as paid:
+
+```jsx
+{checked && (
+  <Flex gap='0.3rem'>
+    <p>Fecha de pago: {paymentDate ? paymentDate.toLocaleDateString() : 'No ingresada'}</p>
+    <div style={{ position: 'relative' }}>
+      <button onClick={(e) => {
+        e.stopPropagation()
+        setOpenDatePicker(!openDatePicker)
+      }}>
+        <FontAwesomeIcon icon={faPencilAlt} />
+      </button>
+      {openDatePicker && (
+        <DatePickerElement ... />
+      )}
+    </div>
+  </Flex>
+)}
+```
+
+## UI Components
+
+The modal uses Chakra UI components:
+
+- `Modal`, `ModalOverlay`, `ModalContent` - Modal structure
+- `ModalHeader`, `ModalBody`, `ModalFooter` - Content sections
+- `ModalCloseButton` - Close button
+- `Button` - Close action button
+- `Flex` - Layout for payment date and edit button
+
+Additional components:
+- `FontAwesomeIcon` - Edit pencil icon
+- `DatePickerElement` - Custom date picker component
+
+## Date Formatting
+
+Dates are formatted using JavaScript's built-in `toLocaleDateString()` method:
+
+```jsx
+fechaVencimiento.toLocaleDateString()  // Formats based on browser locale
+```
+
+Example output: "3/15/2026" (US locale) or "15/3/2026" (ES locale)
+
+## Event Handling
+
+### Stop Propagation
+
+The edit button includes `e.stopPropagation()` to prevent modal close events:
+
+```jsx
+onClick={(e) => {
+  e.stopPropagation()  // Prevent click from bubbling to modal overlay
+  setOpenDatePicker(!openDatePicker)
+}}
+```
+
+## Accessibility
+
+- `isCentered` prop centers modal on screen
+- `aria-label='Open Date Picker'` on edit button
+- Keyboard navigation support via Chakra UI Modal
+- Clear visual hierarchy with header, body, and footer
+
+## Data Persistence
+
+All payment dates are persisted to localStorage with a composite key:
+
+```
+Key Pattern: paymentDate-{month}-{paymentName}
+Value: ISO date string (e.g., "2026-03-15T00:00:00.000Z")
+```
+
+This allows:
+- Per-month, per-payment date tracking
+- Data persistence across browser sessions
+- Independent date management for recurring payments
+
+## Integration Points
+
+1. **usePago Hook** (`src/logic/usePago.js`): Payment state management
+2. **DatePickerElement** (`src/components/DatePickerElement.jsx`): Date selection UI
+3. **localStorage**: Persistent data storage
+4. **FontAwesome**: Edit icon graphics
+5. **Chakra UI**: Modal and layout components
+
+## Read-Only Information
+
+The modal displays these read-only fields:
+- Payment name (from `paymentInfo.nombre`)
+- Due date (from `fechaVencimiento` prop)
+
+Only the payment date is editable, and only when `checked={true}`.

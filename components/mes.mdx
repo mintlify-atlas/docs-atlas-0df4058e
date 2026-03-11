@@ -1,0 +1,252 @@
+---
+title: 'Mes Component'
+description: 'Month container component that organizes and displays payment items for a specific month'
+icon: 'calendar-days'
+---
+
+## Overview
+
+The `Mes` component serves as a container for organizing and displaying payment items that belong to a specific month. It filters the payments based on whether they are monthly recurring or scheduled for the specific month, and renders each applicable payment as a `Pago` component.
+
+## Features
+
+- **Month Header**: Displays the month name
+- **Smart Filtering**: Shows only relevant payments (monthly or month-specific)
+- **List Organization**: Renders payments in an unordered list structure
+- **Scalable Design**: Handles any number of payment items
+
+## Location
+
+```
+src/components/Mes.jsx
+```
+
+## Props
+
+<ParamField path="mes" type="string" required>
+  The month identifier/name (e.g., "Enero", "Febrero", "Marzo")
+  
+  This value is:
+  - Displayed as the section header
+  - Passed to each `Pago` component
+  - Used for filtering which payments to display
+</ParamField>
+
+<ParamField path="pagos" type="array" required>
+  Array of payment objects to be displayed in this month
+  
+  **Each payment object should contain:**
+  - `nombre` (string): Payment name/identifier (used as React key)
+  - `mensual` (boolean): If true, payment appears in all months
+  - `meses` (array, optional): Specific months where this payment applies
+</ParamField>
+
+## Filtering Logic
+
+The component uses a conditional render to determine which payments to display:
+
+```jsx
+(pago.mensual || pago.meses?.includes(mes))
+```
+
+A payment is shown if either:
+1. `pago.mensual === true` - Recurring monthly payment
+2. `pago.meses` array includes the current `mes` value
+
+<Note>
+The optional chaining operator (`?.`) safely handles payments without a `meses` property.
+</Note>
+
+## Usage Example
+
+### Basic Usage
+
+```jsx
+import { Mes } from './components/Mes'
+
+function MonthlyView() {
+  const pagos = [
+    {
+      nombre: 'Electricity',
+      mensual: true  // Appears every month
+    },
+    {
+      nombre: 'Insurance',
+      mensual: false,
+      meses: ['Enero', 'Julio']  // Only January and July
+    },
+    {
+      nombre: 'Rent',
+      mensual: true
+    }
+  ]
+  
+  return <Mes mes="Enero" pagos={pagos} />
+}
+```
+
+In this example:
+- "Electricity" will show (mensual: true)
+- "Insurance" will show (meses includes "Enero")
+- "Rent" will show (mensual: true)
+
+### Multiple Months
+
+```jsx
+import { Mes } from './components/Mes'
+
+function YearView() {
+  const allPayments = [
+    { nombre: 'Electricity', mensual: true },
+    { nombre: 'Water', mensual: true },
+    { nombre: 'Car Registration', meses: ['Marzo'] }
+  ]
+  
+  const months = ['Enero', 'Febrero', 'Marzo']
+  
+  return (
+    <div className="year-view">
+      {months.map(month => (
+        <Mes key={month} mes={month} pagos={allPayments} />
+      ))}
+    </div>
+  )
+}
+```
+
+## Component Structure
+
+The component renders:
+
+```jsx
+<div className='mes'>
+  <h2>{mes}</h2>           {/* Month header */}
+  <ul>
+    {/* Filtered Pago components */}
+  </ul>
+</div>
+```
+
+## Key Prop
+
+Each `Pago` component uses `pago.nombre` as its React key:
+
+```jsx
+<Pago key={pago.nombre} pago={pago} mes={mes} />
+```
+
+<Warning>
+Ensure that `pago.nombre` is unique within each month to avoid React key conflicts.
+</Warning>
+
+## Payment Object Structure
+
+### Monthly Recurring Payment
+
+```javascript
+{
+  nombre: 'Electricity',
+  mensual: true,
+  // ... other payment properties
+}
+```
+
+### Specific Month Payment
+
+```javascript
+{
+  nombre: 'Quarterly Tax',
+  mensual: false,
+  meses: ['Marzo', 'Junio', 'Septiembre', 'Diciembre'],
+  // ... other payment properties
+}
+```
+
+### Hybrid Example
+
+```javascript
+{
+  nombre: 'Special Payment',
+  mensual: true,
+  meses: ['Enero', 'Febrero'],  // meses is ignored when mensual is true
+  // ... other payment properties
+}
+```
+
+<Note>
+When `mensual: true`, the component displays the payment regardless of the `meses` array.
+</Note>
+
+## Rendering Behavior
+
+### Empty Month
+
+If no payments match the filter criteria, the component renders an empty list:
+
+```jsx
+<div className='mes'>
+  <h2>Abril</h2>
+  <ul>
+    {/* Empty - no payments match */}
+  </ul>
+</div>
+```
+
+### Full Month
+
+With multiple matching payments:
+
+```jsx
+<div className='mes'>
+  <h2>Enero</h2>
+  <ul>
+    <Pago key="Rent" pago={rentObj} mes="Enero" />
+    <Pago key="Electricity" pago={electricityObj} mes="Enero" />
+    <Pago key="Internet" pago={internetObj} mes="Enero" />
+  </ul>
+</div>
+```
+
+## Dependencies
+
+- `Pago` component - Renders individual payment items
+
+## Styling
+
+The component uses the `mes` CSS class for the container. Styling should be defined in the application's CSS files.
+
+## Related Components
+
+- [Pago Component](/components/pago) - Individual payment item rendered by Mes
+- [DatePickerElement](/components/date-picker) - Used within Pago for date selection
+- [SwitchElement](/components/switch) - Used within Pago for status toggle
+
+## Common Patterns
+
+### Year View with All Months
+
+```jsx
+const MONTHS = [
+  'Enero', 'Febrero', 'Marzo', 'Abril',
+  'Mayo', 'Junio', 'Julio', 'Agosto',
+  'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+]
+
+function App() {
+  const [pagos, setPagos] = useState([])
+  
+  return (
+    <div className="app">
+      {MONTHS.map(mes => (
+        <Mes key={mes} mes={mes} pagos={pagos} />
+      ))}
+    </div>
+  )
+}
+```
+
+## Source Code Reference
+
+Component implementation at `src/components/Mes.jsx:5-18`
+
+Filtering logic at `src/components/Mes.jsx:11`

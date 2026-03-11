@@ -1,0 +1,310 @@
+---
+title: 'Custom Payments'
+description: 'Add, manage, and remove custom payments tailored to your specific needs'
+icon: 'circle-plus'
+---
+
+## Overview
+
+While Pagosapp comes with a predefined set of common payments, you can add your own custom payments to track any financial obligation. Custom payments support both monthly recurring payments and specific month-based payments.
+
+## Payment Structure
+
+Each payment in Pagosapp follows this structure defined in `src/constants/payments.constants.js`:
+
+```javascript
+{
+  nombre: 'Payment Name',    // Name of the payment
+  mensual: boolean,          // true if payment occurs every month
+  meses: []                  // Array of month names if not monthly
+}
+```
+
+## Types of Payments
+
+<Tabs>
+  <Tab title="Monthly Payments">
+    Monthly payments occur every month throughout the year.
+
+    ### Example Structure
+    ```javascript
+    {
+      nombre: 'Universidad',
+      mensual: true
+    }
+    ```
+
+    ### Default Monthly Payments
+    The application includes these monthly payments by default:
+    - Universidad
+    - UTE Salto
+    - UTE Mdeo
+    - OSE
+    - Cardio
+    - Gastos comunes Salto
+    - Gastos comunes Mdeo
+    - OCA
+    - Cable
+    - Netflix
+    - Centro Médico
+    - Veterinaria
+    - Teléfono
+    - Caja Profesional
+    - Sereno
+  </Tab>
+
+  <Tab title="Specific Month Payments">
+    These payments only occur in specific months of the year.
+
+    ### Example Structure
+    ```javascript
+    {
+      nombre: 'Contribución Mdeo',
+      mensual: false,
+      meses: ['Marzo', 'Julio', 'Noviembre']
+    }
+    ```
+
+    ### Default Specific Month Payments
+    - **Patente**: Enero (January)
+    - **Contribución Salto**: Febrero (February)
+    - **Contribución Mdeo**: Marzo, Julio, Noviembre (March, July, November)
+    - **Seguro**: Octubre, Noviembre, Diciembre (October, November, December)
+    - **Primaria**: Mayo, Agosto, Octubre (May, August, October)
+  </Tab>
+</Tabs>
+
+## Adding Custom Payments
+
+Payments are managed through the `ItemsContext` provider in `src/states/ItemsContext.jsx:19-30`:
+
+```javascript
+const addItem = (item) => {
+  const newItem = { ...item }
+
+  if (item.meses.includes('mensual')) {
+    newItem.mensual = true
+    newItem.meses = []
+  } else {
+    newItem.mensual = false
+  }
+
+  setItems([...items, newItem])
+}
+```
+
+### Adding a Monthly Payment
+
+To add a payment that occurs every month:
+
+```javascript
+const newPayment = {
+  nombre: 'Gym Membership',
+  meses: ['mensual']  // Special keyword for monthly payments
+}
+
+addItem(newPayment)
+```
+
+<Note>
+When a payment includes 'mensual' in the `meses` array, it's automatically converted to `mensual: true` with an empty `meses` array.
+</Note>
+
+### Adding a Specific Month Payment
+
+To add a payment for specific months:
+
+```javascript
+const newPayment = {
+  nombre: 'Quarterly Tax',
+  mensual: false,
+  meses: ['Marzo', 'Junio', 'Septiembre', 'Diciembre']
+}
+
+addItem(newPayment)
+```
+
+## Valid Month Names
+
+Payments must use the Spanish month names as defined in `src/App.jsx:12-25`:
+
+<CodeGroup>
+```javascript Month Names Array
+const meses = [
+  'Enero',        // January
+  'Febrero',      // February
+  'Marzo',        // March
+  'Abril',        // April
+  'Mayo',         // May
+  'Junio',        // June
+  'Julio',        // July
+  'Agosto',       // August
+  'Septiembre',   // September
+  'Octubre',      // October
+  'Noviembre',    // November
+  'Diciembre'     // December
+]
+```
+</CodeGroup>
+
+<Warning>
+Month names are case-sensitive and must match exactly as shown above. Using incorrect capitalization or English names will prevent the payment from displaying correctly.
+</Warning>
+
+## Removing Payments
+
+To remove a payment from the system:
+
+```javascript
+const removeItem = (item) => {
+  setItems(items.filter(i => i !== item))
+}
+```
+
+<Info>
+Removing a payment will delete it from all months. Any associated data like due dates and payment status will be retained in localStorage until explicitly cleared.
+</Info>
+
+## Payment Display Logic
+
+Payments are filtered and displayed per month using this logic in `src/components/Mes.jsx:10-14`:
+
+```jsx
+{pagos.map((pago) => (
+  (pago.mensual || pago.meses?.includes(mes)) && (
+    <Pago key={pago.nombre} pago={pago} mes={mes} />
+  )
+))}
+```
+
+A payment will appear in a month if:
+- It's marked as `mensual: true`, OR
+- The month name is included in the `meses` array
+
+## Data Persistence
+
+Custom payments are stored in localStorage:
+
+```javascript
+const [items, setItems] = useState(
+  localStorage.getItem('items') 
+    ? JSON.parse(localStorage.getItem('items')) 
+    : paymentsConstants
+)
+
+useEffect(() => {
+  localStorage.setItem('items', JSON.stringify(items))
+}, [items])
+```
+
+<Card title="Storage Behavior" icon="database">
+  - **Initial Load**: Uses predefined constants from `payments.constants.js`
+  - **After Modifications**: All changes are saved to localStorage
+  - **Persistence**: Custom payments persist across browser sessions
+  - **Reset**: Using the Reset button clears all custom payments and reverts to defaults
+</Card>
+
+## Example Use Cases
+
+<AccordionGroup>
+  <Accordion title="Personal Subscriptions" icon="credit-card">
+    Add monthly subscriptions like:
+    ```javascript
+    {
+      nombre: 'Spotify Premium',
+      meses: ['mensual']
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Seasonal Payments" icon="snowflake">
+    Track seasonal obligations:
+    ```javascript
+    {
+      nombre: 'Summer Camp',
+      mensual: false,
+      meses: ['Junio', 'Julio']
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Quarterly Obligations" icon="calendar-range">
+    Manage quarterly payments:
+    ```javascript
+    {
+      nombre: 'HOA Fees',
+      mensual: false,
+      meses: ['Marzo', 'Junio', 'Septiembre', 'Diciembre']
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Annual Events" icon="calendar-check">
+    Remember annual payments:
+    ```javascript
+    {
+      nombre: 'License Renewal',
+      mensual: false,
+      meses: ['Enero']
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Descriptive Names" icon="text">
+    Use clear, descriptive names that immediately identify the payment. Avoid abbreviations that might be unclear later.
+  </Card>
+  
+  <Card title="Consistent Naming" icon="list">
+    Maintain a consistent naming convention across all your custom payments for easier management.
+  </Card>
+  
+  <Card title="Review Regularly" icon="rotate">
+    Periodically review your payment list to remove outdated payments and add new obligations.
+  </Card>
+  
+  <Card title="Backup Before Reset" icon="floppy-disk">
+    Before using the Reset button, note down your custom payments as they will be permanently deleted.
+  </Card>
+</CardGroup>
+
+## Accessing the Context
+
+The `ItemsContext` provides these functions to any component:
+
+```javascript
+const { items, addItem, removeItem } = useItems()
+```
+
+- **items**: Array of all payments (default + custom)
+- **addItem(payment)**: Add a new payment
+- **removeItem(payment)**: Remove an existing payment
+
+## Integration with Other Features
+
+Once a custom payment is added:
+
+1. **Due Dates**: Set due dates just like default payments
+2. **Status Tracking**: Visual indicators work automatically
+3. **Month Display**: Appears in appropriate months based on configuration
+4. **Payment Marking**: Can be marked as paid/unpaid
+5. **Details Modal**: Accessible through click interaction
+
+<Note>
+Custom payments have access to all the same features as default payments, including due date management, status tracking, and payment date recording.
+</Note>
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Payment Tracking" icon="check-circle" href="/features/payment-tracking">
+    Learn how to track your custom payments
+  </Card>
+  
+  <Card title="Due Dates" icon="calendar-days" href="/features/due-dates">
+    Set due dates for custom payments
+  </Card>
+</CardGroup>

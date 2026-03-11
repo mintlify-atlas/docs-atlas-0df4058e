@@ -1,0 +1,149 @@
+---
+title: 'Architecture'
+description: 'Technical architecture and stack overview of Pagosapp'
+---
+
+## Overview
+
+Pagosapp is built as a modern single-page application (SPA) using React and Vite. The application follows a component-based architecture with centralized state management for handling payment data.
+
+## Technology Stack
+
+### Core Framework
+
+- **React 18.2.0**: Main UI framework for building the component hierarchy
+- **Vite 5.1.0**: Lightning-fast build tool and development server
+- **@vitejs/plugin-react-swc**: Uses SWC compiler for faster builds and hot module replacement
+
+### UI Libraries
+
+- **Chakra UI 2.8.2**: Component library for modals, forms, and UI elements
+- **Emotion**: CSS-in-JS styling (required by Chakra UI)
+- **Framer Motion**: Animation library used by Chakra UI
+- **FontAwesome**: Icon library for UI elements
+
+### Utilities
+
+- **date-fns 3.3.1**: Date manipulation and formatting
+- **react-datepicker 6.1.0**: Date picker component for due date selection
+- **react-switch 7.0.0**: Toggle switch component for payment status
+
+## Build Configuration
+
+The Vite configuration is minimal and optimized for React development:
+
+```javascript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+
+export default defineConfig({
+  plugins: [react()],
+})
+```
+
+Key features:
+- **Fast refresh**: Instant feedback during development
+- **SWC compiler**: Faster than Babel for transpiling JSX
+- **Optimized builds**: Tree-shaking and code splitting out of the box
+
+## Application Entry Point
+
+The application bootstraps in `src/main.jsx` with a multi-provider setup:
+
+```jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './styles/index.css'
+
+import { ChakraProvider } from '@chakra-ui/react'
+import ItemsProvider from './states/ItemsContext.jsx'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <ChakraProvider>
+      <ItemsProvider>
+        <App />
+      </ItemsProvider>
+    </ChakraProvider>
+  </React.StrictMode>
+)
+```
+
+### Provider Hierarchy
+
+1. **React.StrictMode**: Enables additional development checks
+2. **ChakraProvider**: Provides Chakra UI theme and styling context
+3. **ItemsProvider**: Custom context provider for payment items state
+4. **App**: Root application component
+
+## Data Persistence
+
+The application uses **localStorage** for data persistence:
+
+- Payment items are stored under the `items` key
+- Individual payment states are stored with keys like `checked-{mes}-{nombre}`
+- Due dates are stored with keys like `startDate-{mes}-{nombre}`
+- Payment dates use keys like `paymentDate-{mes}-{nombre}`
+
+This approach provides:
+- Instant data persistence without backend
+- Offline-first functionality
+- Simple state synchronization
+- Data survives page reloads
+
+## Code Style
+
+The project uses **StandardJS** for code linting:
+
+```json
+"eslintConfig": {
+  "extends": "./node_modules/standard/eslintrc.json"
+}
+```
+
+Linting command:
+```bash
+npm run lint
+```
+
+## File Structure
+
+```
+src/
+├── components/          # React components
+│   ├── modals/         # Modal dialogs
+│   ├── HomeHeader.jsx  # Header with add button
+│   ├── Mes.jsx         # Month container component
+│   ├── Pago.jsx        # Individual payment item
+│   └── ...             # Form elements
+├── states/             # State management
+│   └── ItemsContext.jsx
+├── logic/              # Custom hooks
+│   └── usePago.js
+├── constants/          # Static data
+│   └── payments.constants.js
+├── utils/              # Helper functions
+│   └── dateUtils.js
+├── styles/             # CSS files
+├── App.jsx             # Root component
+└── main.jsx            # Application entry point
+```
+
+## Development Scripts
+
+```json
+{
+  "dev": "vite",                    // Start development server
+  "build": "vite build",            // Build for production
+  "preview": "vite preview",        // Preview production build
+  "lint": "eslint . --ext js,jsx"  // Run linter
+}
+```
+
+## Performance Considerations
+
+- **SWC Compiler**: Significantly faster than Babel for development builds
+- **Component Memoization**: Opportunities exist for React.memo on static components
+- **localStorage**: Synchronous API, consider IndexedDB for large datasets
+- **Bundle Size**: Current dependencies are well-optimized for production

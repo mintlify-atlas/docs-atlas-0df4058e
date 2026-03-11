@@ -1,0 +1,158 @@
+---
+title: 'Pago Component'
+description: 'The main payment item component that displays and manages individual payment entries'
+icon: 'money-bill'
+---
+
+## Overview
+
+The `Pago` component is the core building block for displaying individual payment items in Pagosapp. It provides a comprehensive interface for managing payment status, due dates, and payment details through an interactive list item.
+
+## Features
+
+- **Visual Status Indicators**: Color-coded styling based on payment status and due date proximity
+- **Payment Toggle**: Quick switch to mark payments as paid/unpaid
+- **Date Management**: Integrated date picker for setting due dates
+- **Payment Details Modal**: Full payment information accessible via click
+- **Smart State Management**: Leverages the `usePago` hook for state and localStorage persistence
+
+## Location
+
+```
+src/components/Pago.jsx
+```
+
+## Props
+
+<ParamField path="pago" type="object" required>
+  The payment object containing payment information
+  
+  **Properties:**
+  - `nombre` (string): The payment name/title
+  - `mensual` (boolean): Whether this is a monthly recurring payment
+  - `meses` (array): Specific months when this payment applies
+</ParamField>
+
+<ParamField path="mes" type="string" required>
+  The month identifier for this payment instance (e.g., "Enero", "Febrero")
+</ParamField>
+
+## Status Styling
+
+The component applies dynamic CSS classes based on payment status:
+
+| Class | Condition | Meaning |
+|-------|-----------|----------|
+| `item-green` | `checked === true` | Payment completed |
+| `item-gray` | No due date OR `dateDifference > 3` | Not urgent or no date set |
+| `item-red` | `dateDifference < 0` | Overdue payment |
+| `item-orange` | `dateDifference <= 3` | Due soon (within 3 days) |
+
+<Note>
+The `dateDifference` value is calculated by the `usePago` hook and represents days until the due date.
+</Note>
+
+## Usage Example
+
+```jsx
+import { Pago } from './components/Pago'
+
+function PaymentList() {
+  const pago = {
+    nombre: 'Electricity Bill',
+    mensual: true,
+    meses: ['Enero', 'Febrero', 'Marzo']
+  }
+  
+  return (
+    <ul>
+      <Pago pago={pago} mes="Enero" />
+    </ul>
+  )
+}
+```
+
+## Component Structure
+
+The component renders a list item (`<li>`) with the following child elements:
+
+1. **Payment Name**: Displays `pago.nombre`
+2. **Switch Element**: Toggle for marking payment as paid/unpaid
+3. **Date Picker Button**: Pencil icon button to open date selector
+4. **Date Picker**: Conditional rendering when `openDatePicker` is true
+5. **Start Date Display**: Shows the current due date
+6. **Payment Modal**: Opens on item click for detailed information
+
+## Hook Integration
+
+The component uses the `usePago` hook which provides:
+
+```javascript
+const {
+  checked,           // Payment completion status
+  startDate,         // Due date
+  openDatePicker,    // Date picker visibility state
+  handleChange,      // Switch toggle handler
+  handleDateChange,  // Date selection handler
+  dateDifference,    // Days until due date
+  setOpenDatePicker  // Date picker state setter
+} = usePago(pago, mes)
+```
+
+See the [State Management documentation](/development/state-management) for details on the usePago hook.
+
+## Event Handling
+
+### Item Click
+
+Clicking the list item opens the payment modal:
+
+```jsx
+const handleItemClick = (e) => {
+  e.preventDefault()
+  e.stopPropagation()
+  onOpen()  // Opens PaymentModal
+}
+```
+
+### Date Picker Toggle
+
+The pencil icon button toggles the date picker:
+
+```jsx
+<button
+  onClick={(e) => {
+    e.stopPropagation()  // Prevents modal from opening
+    setOpenDatePicker(!openDatePicker)
+  }}
+  aria-label='Open Date Picker'
+>
+  <FontAwesomeIcon icon={faPencilAlt} />
+</button>
+```
+
+## Dependencies
+
+- `usePago` hook - State management and persistence
+- `SwitchElement` - Payment status toggle
+- `DatePickerElement` - Due date selection
+- `StartDateElement` - Due date display
+- `PaymentModal` - Detailed payment information
+- `@chakra-ui/react` - Modal disclosure management
+- `@fortawesome/react-fontawesome` - Edit icon
+
+## Styling
+
+The component imports `../styles/Pago.css` for styling. The main visual feedback comes from the dynamic `itemStyle` class applied to the `<li>` element.
+
+## Related Components
+
+- [Mes Component](/components/mes) - Container that renders multiple Pago components
+- [SwitchElement](/components/switch) - Payment toggle control
+- [DatePickerElement](/components/date-picker) - Due date selector
+
+## Source Code Reference
+
+Key implementation at `src/components/Pago.jsx:13-70`
+
+Status styling logic at `src/components/Pago.jsx:16-25`

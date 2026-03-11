@@ -1,0 +1,310 @@
+---
+title: 'Components'
+description: 'Component hierarchy and structure in Pagosapp'
+---
+
+## Component Hierarchy
+
+The application follows a clear component hierarchy:
+
+```
+App
+├── HomeHeader
+│   └── AddNewItemModal
+├── Mes (x3 displayed)
+│   └── Pago (multiple per month)
+│       ├── SwitchElement
+│       ├── DatePickerElement
+│       ├── StartDateElement
+│       └── PaymentModal
+```
+
+## Root Component: App
+
+**Location**: `src/App.jsx`
+
+The App component manages the month navigation and renders the main layout:
+
+```jsx
+const App = () => {
+  const [indiceInicio, setIndiceInicio] = useState(
+    new Date().getMonth() - 1 < 0 ? 0 : new Date().getMonth() - 1
+  )
+
+  const showedMonths = meses.slice(indiceInicio, indiceInicio + 3)
+  const { items } = useItems()
+
+  return (
+    <main>
+      <HomeHeader />
+      <div className='buttonContainer'>
+        <button className='myButton' onClick={handlePreviousClick}>
+          Anterior
+        </button>
+        <button className='myButton' onClick={handleNextClick}>
+          Siguiente
+        </button>
+      </div>
+      <section className='mesesYPagos'>
+        {showedMonths.map((mes) => (
+          <Mes key={mes} mes={mes} pagos={items} />
+        ))}
+      </section>
+      <div className='buttonContainer'>
+        <button className='myButton-reset' onClick={handleResetClick}>
+          Reset
+        </button>
+      </div>
+    </main>
+  )
+}
+```
+
+**Key Features**:
+- Displays 3 months at a time
+- Default start: current month - 1
+- Navigation buttons to slide through months
+- Reset button to clear localStorage
+- Consumes `useItems` hook for payment data
+
+## HomeHeader Component
+
+**Location**: `src/components/HomeHeader.jsx`
+
+Provides the application header with add functionality:
+
+```jsx
+const HomeHeader = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  return (
+    <Flex flexDirection='column' alignItems='center' justifyContent='center'>
+      <Heading color='white' padding='1rem' size='2xl' textAlign='center'>
+        PAGOS PENDIENTES
+      </Heading>
+      <Text fontSize='2.3rem' marginBottom='1rem'> 💸💸💸💸 </Text>
+      <IconButton 
+        aria-label='Add Items' 
+        colorScheme='red' 
+        icon={<AddIcon />} 
+        onClick={onOpen} 
+      />
+      <AddNewItemModal isOpen={isOpen} onClose={onClose} />
+    </Flex>
+  )
+}
+```
+
+**Dependencies**: Chakra UI components for layout and modal control
+
+## Mes Component
+
+**Location**: `src/components/Mes.jsx`
+
+Renders a month container with filtered payment items:
+
+```jsx
+export function Mes ({ mes, pagos }) {
+  return (
+    <div className='mes'>
+      <h2>{mes}</h2>
+      <ul>
+        {pagos.map((pago) => (
+          (pago.mensual || pago.meses?.includes(mes)) && (
+            <Pago key={pago.nombre} pago={pago} mes={mes} />
+          )
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
+**Logic**:
+- Filters payments by month
+- Shows payments marked as `mensual` (monthly) in all months
+- Shows payments with specific months in `meses` array
+- Uses payment name as unique key
+
+## Pago Component
+
+**Location**: `src/components/Pago.jsx`
+
+The most complex component, representing an individual payment item:
+
+```jsx
+export function Pago ({ pago, mes }) {
+  const { 
+    checked, 
+    startDate, 
+    openDatePicker, 
+    handleChange, 
+    handleDateChange, 
+    dateDifference, 
+    setOpenDatePicker 
+  } = usePago(pago, mes)
+
+  let itemStyle = ''
+  if (checked) {
+    itemStyle = 'item-green'
+  } else if (!startDate || dateDifference > 3) {
+    itemStyle = 'item-gray'
+  } else if (dateDifference < 0) {
+    itemStyle = 'item-red'
+  } else if (dateDifference <= 3) {
+    itemStyle = 'item-orange'
+  }
+
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  return (
+    <li className={itemStyle} onClick={onOpen}>
+      <span>
+        {pago.nombre}
+        <SwitchElement checked={checked} handleChange={handleChange} />
+        {/* Date picker button and component */}
+      </span>
+      <StartDateElement checked={checked} startDate={startDate} />
+      <PaymentModal 
+        isOpen={isOpen} 
+        onClose={onClose} 
+        paymentInfo={pago} 
+        fechaVencimiento={startDate} 
+        mes={mes} 
+        checked={checked} 
+      />
+    </li>
+  )
+}
+```
+
+**Color Coding Logic**:
+- **Green** (`item-green`): Payment is marked as paid
+- **Gray** (`item-gray`): No due date set or due date > 3 days away
+- **Red** (`item-red`): Overdue (past due date)
+- **Orange** (`item-orange`): Due soon (0-3 days)
+
+**Features**:
+- Status toggle switch
+- Due date picker with edit button
+- Click to open detailed modal
+- Visual status indication
+
+## Form Elements
+
+### SwitchElement
+
+Wraps react-switch for payment status toggle:
+
+```jsx
+<SwitchElement checked={checked} handleChange={handleChange} />
+```
+
+### DatePickerElement
+
+Wraps react-datepicker for due date selection:
+
+```jsx
+<DatePickerElement
+  startDate={startDate}
+  handleDateChange={handleDateChange}
+  openDatePicker={openDatePicker}
+  setOpenDatePicker={setOpenDatePicker}
+/>
+```
+
+### StartDateElement
+
+Displays formatted due date or payment status:
+
+```jsx
+<StartDateElement checked={checked} startDate={startDate} />
+```
+
+## Modal Components
+
+### AddNewItemModal
+
+**Location**: `src/components/modals/AddNewItemModal.jsx`
+
+Modal for adding new payment items:
+
+```jsx
+const NewItemModal = ({ isOpen, onClose }) => {
+  const { addItem } = useItems()
+  const [nombre, setName] = useState('')
+  const [meses, setMeses] = useState([])
+  const [error, setError] = useState('')
+
+  const handleSave = () => {
+    if (!nombre.trim()) {
+      setError('El nombre no puede estar vacío.')
+      return
+    }
+    if (meses.length === 0) {
+      setError('Debes seleccionar al menos un mes.')
+      return
+    }
+    addItem({ nombre, meses })
+    onClose()
+  }
+
+  // ... month selection UI
+}
+```
+
+**Features**:
+- Input validation
+- Month selection (individual or "mensual" for all months)
+- Integrates with ItemsContext via `addItem`
+
+### PaymentModal
+
+**Location**: `src/components/modals/PaymentModal.jsx`
+
+Displays detailed payment information when clicking a payment item.
+
+## Component Best Practices
+
+### Prop Types
+
+Components use prop-types for runtime validation:
+
+```jsx
+/* eslint-disable react/prop-types */
+```
+
+Note: PropTypes are currently disabled. Consider re-enabling for better development experience.
+
+### Event Handling
+
+Careful event propagation management:
+
+```jsx
+const handleItemClick = (e) => {
+  e.preventDefault()
+  e.stopPropagation()
+  onOpen()
+}
+```
+
+### Accessibility
+
+Buttons include `aria-label` attributes:
+
+```jsx
+<button aria-label='Open Date Picker'>
+  <FontAwesomeIcon icon={faPencilAlt} />
+</button>
+```
+
+## Styling Approach
+
+- **CSS Modules**: Component-specific styles in separate CSS files
+- **Chakra UI**: Theme-based styling for modals and forms
+- **CSS Classes**: Dynamic classes based on payment status
+
+```jsx
+const itemStyle = checked ? 'item-green' : 'item-red'
+<li className={itemStyle}>...</li>
+```

@@ -1,0 +1,189 @@
+---
+title: 'Payment Categories'
+description: 'Understanding monthly and specific-month payment types in Pagosapp'
+---
+
+## Payment Type Overview
+
+Pagosapp supports two types of payment scheduling to accommodate different billing patterns:
+
+1. **Monthly Payments** (Mensual): Payments that recur every month
+2. **Specific-Month Payments**: Payments that only occur in selected months
+
+## Monthly Payments
+
+Monthly payments are bills or expenses that recur every single month of the year.
+
+### When to Use Monthly
+
+Use the monthly option for:
+
+- Subscription services (Netflix, Spotify, etc.)
+- Rent or mortgage payments
+- Utility bills that occur every month
+- Monthly insurance premiums
+- Gym memberships
+- Cell phone bills
+
+### Creating a Monthly Payment
+
+When adding a new payment:
+
+1. Open the "Add Payment" modal
+2. Enter the payment name
+3. Click **Selecciona los meses** (Select months)
+4. Check the **Mensual** option at the top of the month list
+5. Save the payment
+
+<Note>
+When you select "Mensual", the individual month checkboxes become disabled. This prevents accidental month selection since the payment will automatically appear in all 12 months.
+</Note>
+
+### How Monthly Payments Work
+
+Internally, monthly payments are stored with:
+- `mensual: true` flag
+- Empty `meses` array
+
+The application automatically displays these payments in every month view, ensuring you never miss tracking a recurring obligation.
+
+## Specific-Month Payments
+
+Specific-month payments are expenses that only occur during certain months of the year.
+
+### When to Use Specific Months
+
+Use specific-month selection for:
+
+- Quarterly payments (select 3 specific months)
+- Semi-annual insurance payments
+- Property tax payments
+- Annual subscription renewals
+- Seasonal expenses (heating bills in winter months)
+- School tuition payments (during academic terms)
+
+### Creating a Specific-Month Payment
+
+1. Open the "Add Payment" modal
+2. Enter the payment name
+3. Click **Selecciona los meses**
+4. Check each month where this payment occurs
+5. Save the payment
+
+<Warning>
+Do NOT check the "Mensual" option when creating specific-month payments. Once "Mensual" is checked, individual months cannot be selected.
+</Warning>
+
+### How Specific-Month Payments Work
+
+Internally, specific-month payments are stored with:
+- `mensual: false` flag
+- `meses` array containing selected month names (e.g., `["Enero", "Abril", "Julio", "Octubre"]`)
+
+The application filters and displays these payments only in the months you've specified.
+
+## Payment Type Comparison
+
+| Feature | Monthly Payment | Specific-Month Payment |
+|---------|----------------|------------------------|
+| **Frequency** | Every month (12 times/year) | Selected months only |
+| **Storage** | `mensual: true`, `meses: []` | `mensual: false`, `meses: [...]` |
+| **Use Case** | Regular recurring bills | Seasonal or periodic payments |
+| **Month Selection** | Automatic (all months) | Manual (choose specific months) |
+| **Typical Examples** | Rent, Netflix, Phone bill | Quarterly taxes, Annual insurance |
+
+## Examples
+
+### Example 1: Setting Up Monthly Payments
+
+<Steps>
+  <Step title="Add Netflix subscription">
+    Name: "Netflix", Select: Mensual
+  </Step>
+  <Step title="Add rent payment">
+    Name: "Rent", Select: Mensual
+  </Step>
+  <Step title="View any month">
+    Both payments appear in January, February, March... all 12 months
+  </Step>
+</Steps>
+
+### Example 2: Setting Up Quarterly Payments
+
+<Steps>
+  <Step title="Add quarterly taxes">
+    Name: "Tax Payment"
+  </Step>
+  <Step title="Select specific months">
+    Check: Marzo (March), Junio (June), Septiembre (September), Diciembre (December)
+  </Step>
+  <Step title="Save the payment">
+    Payment only appears in those 4 months
+  </Step>
+</Steps>
+
+### Example 3: Seasonal Utility Bill
+
+```
+Payment: "Heating Bill"
+Months: Octubre, Noviembre, Diciembre, Enero, Febrero, Marzo
+```
+
+This payment will only appear during the 6 winter months when heating is typically used.
+
+## Month Display Logic
+
+The application uses the following logic to determine if a payment should display in a given month:
+
+```javascript
+(pago.mensual || pago.meses?.includes(mes))
+```
+
+This means a payment appears in a month if:
+- The payment is marked as `mensual: true`, OR
+- The month name is included in the payment's `meses` array
+
+## Common Patterns
+
+<AccordionGroup>
+  <Accordion title="How do I change a monthly payment to specific months?">
+    Currently, you would need to use the Reset function and recreate your payments, or manually edit the localStorage data. The app is designed for initial setup rather than frequent changes to payment types.
+  </Accordion>
+  
+  <Accordion title="Can I have the same payment name for both monthly and specific-month?">
+    While technically possible, it's not recommended as it may cause confusion. Use different names like "Electric (Summer)" vs "Electric (Winter)" if you need to track seasonal variations.
+  </Accordion>
+  
+  <Accordion title="What if I select some months then check 'Mensual'?">
+    The "Mensual" checkbox overrides any specific month selections. The previously selected months will be cleared, and the payment will be set to appear in all months.
+  </Accordion>
+  
+  <Accordion title="Can I create a payment with no months selected?">
+    No, the application requires at least one month selection or the "Mensual" option. The save button will show an error if no months are selected.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Card title="Organize by Frequency" icon="calendar">
+  Group your thinking by frequency: first set up all monthly recurring bills, then add quarterly payments, then annual payments. This helps ensure you don't miss any obligations.
+</Card>
+
+<Card title="Be Specific with Names" icon="tag">
+  Use descriptive names that include the frequency if helpful: "Property Tax (Annual)", "Insurance (Quarterly)". This makes it easier to understand payment patterns at a glance.
+</Card>
+
+<Card title="Plan for Yearly Cycles" icon="repeat">
+  When setting up specific-month payments, think through the entire year to ensure you've captured all occurrences of that payment.
+</Card>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Managing Payments" icon="list-check" href="/guide/managing-payments">
+    Learn how to track and complete payments
+  </Card>
+  <Card title="Local Storage" icon="database" href="/guide/local-storage">
+    Understand how payment data is persisted
+  </Card>
+</CardGroup>

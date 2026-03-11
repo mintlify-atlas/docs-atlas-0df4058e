@@ -1,0 +1,304 @@
+---
+title: 'DatePickerElement Component'
+description: 'Date selection component for setting payment due dates'
+icon: 'calendar'
+---
+
+## Overview
+
+The `DatePickerElement` component provides an interface for users to select due dates for payments. It wraps the `react-datepicker` library with custom positioning and event handling tailored for the Pagosapp use case.
+
+## Features
+
+- **Controlled Date Selection**: Integrates with parent component state
+- **Calendar Overlay**: Positioned absolutely for overlay display
+- **Smart Event Handling**: Manages calendar open/close states
+- **Click Outside Detection**: Automatically closes when clicking outside
+- **Custom Styling**: Uses dedicated DatePicker CSS
+
+## Location
+
+```
+src/components/DatePickerElement.jsx
+```
+
+## Props
+
+<ParamField path="startDate" type="Date" required>
+  The currently selected date (controlled component)
+  
+  - Can be `null` if no date is set
+  - Should be a JavaScript Date object
+  - Displayed as the selected date in the calendar
+</ParamField>
+
+<ParamField path="handleDateChange" type="function" required>
+  Callback function invoked when a date is selected
+  
+  **Signature:**
+  ```javascript
+  (date: Date) => void
+  ```
+  
+  Typically updates state and persists to localStorage via the `usePago` hook.
+</ParamField>
+
+<ParamField path="openDatePicker" type="boolean" required>
+  Controls whether the date picker calendar is visible
+  
+  - `true`: Calendar is displayed
+  - `false`: Calendar is hidden
+</ParamField>
+
+<ParamField path="setOpenDatePicker" type="function" required>
+  State setter for controlling calendar visibility
+  
+  **Signature:**
+  ```javascript
+  (open: boolean) => void
+  ```
+  
+  Called by calendar lifecycle events (open, close, click outside).
+</ParamField>
+
+## Usage Example
+
+### Basic Implementation
+
+```jsx
+import { useState } from 'react'
+import { DatePickerElement } from './components/DatePickerElement'
+
+function PaymentForm() {
+  const [dueDate, setDueDate] = useState(null)
+  const [isOpen, setIsOpen] = useState(false)
+  
+  const handleDateChange = (date) => {
+    setDueDate(date)
+    setIsOpen(false)  // Close after selection
+  }
+  
+  return (
+    <div>
+      <button onClick={() => setIsOpen(!isOpen)}>
+        Select Due Date
+      </button>
+      
+      {isOpen && (
+        <DatePickerElement
+          startDate={dueDate}
+          handleDateChange={handleDateChange}
+          openDatePicker={isOpen}
+          setOpenDatePicker={setIsOpen}
+        />
+      )}
+    </div>
+  )
+}
+```
+
+### Integration with usePago Hook
+
+As used in the `Pago` component:
+
+```jsx
+import { usePago } from '../logic/usePago'
+import { DatePickerElement } from './DatePickerElement'
+
+function Pago({ pago, mes }) {
+  const {
+    startDate,
+    openDatePicker,
+    handleDateChange,
+    setOpenDatePicker
+  } = usePago(pago, mes)
+  
+  return (
+    <div>
+      <button onClick={() => setOpenDatePicker(!openDatePicker)}>
+        Edit Date
+      </button>
+      
+      {openDatePicker && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <DatePickerElement
+            startDate={startDate}
+            handleDateChange={handleDateChange}
+            openDatePicker={openDatePicker}
+            setOpenDatePicker={setOpenDatePicker}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+```
+
+## Component Structure
+
+The component renders a positioned wrapper containing the DatePicker:
+
+```jsx
+<div style={{ position: 'absolute' }}>
+  <DatePicker
+    selected={startDate}
+    onChange={handleDateChange}
+    open={openDatePicker}
+    onCalendarClose={() => setOpenDatePicker(false)}
+    onCalendarOpen={() => setOpenDatePicker(true)}
+    onClickOutside={() => setOpenDatePicker(false)}
+    customInput={<div />}
+  />
+</div>
+```
+
+## Positioning
+
+The wrapper uses `position: absolute` to overlay the calendar on top of other content. Parent components should provide appropriate positioning context.
+
+### Typical Parent Structure
+
+```jsx
+<div style={{ position: 'relative', padding: '0.2rem 0.4rem' }}>
+  <button onClick={togglePicker}>
+    {/* Trigger icon */}
+  </button>
+  
+  {openDatePicker && (
+    <div onClick={(e) => e.stopPropagation()}>
+      <DatePickerElement {...props} />
+    </div>
+  )}
+</div>
+```
+
+<Note>
+The parent div should use `position: relative` to establish a positioning context for the absolute-positioned DatePicker.
+</Note>
+
+## Event Handling
+
+### Calendar Lifecycle Events
+
+The component manages three calendar events:
+
+| Event | Handler | Purpose |
+|-------|---------|----------|
+| `onCalendarClose` | `setOpenDatePicker(false)` | Sync state when calendar closes |
+| `onCalendarOpen` | `setOpenDatePicker(true)` | Sync state when calendar opens |
+| `onClickOutside` | `setOpenDatePicker(false)` | Close calendar on outside click |
+
+### Date Selection
+
+When a date is selected:
+
+1. `onChange` is triggered with the selected Date object
+2. `handleDateChange(date)` is called
+3. Parent component updates state (typically also saves to localStorage)
+4. Calendar automatically closes via `handleDateChange` implementation
+
+## Custom Input
+
+The component uses an invisible custom input:
+
+```jsx
+customInput={<div />}
+```
+
+This prevents the default text input from appearing, as the trigger mechanism is handled by the parent component (typically a button with a pencil icon).
+
+## Dependencies
+
+- `react-datepicker` - Core date picker functionality
+- Custom styles from `../styles/DatePicker.css`
+
+### Installing react-datepicker
+
+```bash
+npm install react-datepicker
+```
+
+Don't forget to import the base CSS in your app:
+
+```javascript
+import 'react-datepicker/dist/react-datepicker.css'
+```
+
+## Styling
+
+The component imports custom styles from `../styles/DatePicker.css`. This file should contain:
+
+- Calendar appearance customization
+- Day/week styling
+- Header styling
+- Selected date highlighting
+- Hover effects
+
+## Date Persistence
+
+In the Pagosapp context, date changes are persisted via the `usePago` hook:
+
+```javascript
+const handleDateChange = (date) => {
+  setStartDate(date)
+  localStorage.setItem(`startDate-${mes}-${pago.nombre}`, date.toISOString())
+  setOpenDatePicker(false)
+}
+```
+
+See the [State Management documentation](/development/state-management) for details on the usePago hook and persistence.
+
+## Click Event Propagation
+
+When used inside clickable containers (like the `Pago` component's list item), wrap the DatePickerElement to prevent unwanted event propagation:
+
+```jsx
+<div onClick={(e) => {
+  e.stopPropagation()  // Prevents parent click handlers from firing
+}}>
+  <DatePickerElement {...props} />
+</div>
+```
+
+This prevents the parent element's click handler (e.g., opening a modal) from triggering when interacting with the date picker.
+
+## Accessibility Considerations
+
+- The parent trigger button should include proper ARIA labels
+- Keyboard navigation is handled by the underlying `react-datepicker` library
+- Screen readers can navigate the calendar using arrow keys
+
+### Accessible Trigger Button
+
+```jsx
+<button
+  onClick={() => setOpenDatePicker(!openDatePicker)}
+  aria-label='Open Date Picker'
+  aria-expanded={openDatePicker}
+>
+  <FontAwesomeIcon icon={faPencilAlt} />
+</button>
+```
+
+## Related Components
+
+- [Pago Component](/components/pago) - Primary consumer of DatePickerElement
+- [SwitchElement](/components/switch) - Complementary control in Pago
+
+## react-datepicker Props Reference
+
+For additional customization options, see the [react-datepicker documentation](https://reactdatepicker.com/).
+
+Common additional props you might want to add:
+
+- `dateFormat` - Custom date display format
+- `minDate` / `maxDate` - Restrict selectable date range
+- `showTimeSelect` - Enable time selection
+- `inline` - Display calendar inline instead of popup
+- `locale` - Localization support
+
+## Source Code Reference
+
+Component implementation at `src/components/DatePickerElement.jsx:5-19`
+
+Absolute positioning at `src/components/DatePickerElement.jsx:7`

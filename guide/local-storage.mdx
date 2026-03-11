@@ -1,0 +1,303 @@
+---
+title: 'Local Storage'
+description: 'Understanding how Pagosapp stores and persists your payment data'
+---
+
+## Overview
+
+Pagosapp uses browser localStorage to persist all your payment data locally. This means your data never leaves your device and remains private, but it also means you're responsible for maintaining your own backups.
+
+## What is localStorage?
+
+localStorage is a web browser feature that allows applications to store data directly in your browser. The data persists even after you close the browser tab or restart your computer.
+
+<Info>
+**Privacy First**: Your payment data is stored only on your device. Pagosapp does not send any data to external servers.
+</Info>
+
+## Data Storage Structure
+
+Pagosapp stores several types of data in localStorage:
+
+### 1. Payment Items List
+
+**Key**: `items`
+
+**Format**: JSON array of payment objects
+
+```json
+[
+  {
+    "nombre": "Netflix",
+    "mensual": true,
+    "meses": []
+  },
+  {
+    "nombre": "Property Tax",
+    "mensual": false,
+    "meses": ["Marzo", "Junio", "Septiembre", "Diciembre"]
+  }
+]
+```
+
+**Fields**:
+- `nombre` (string): The payment name
+- `mensual` (boolean): Whether this is a monthly recurring payment
+- `meses` (array): List of specific months (empty if mensual is true)
+
+### 2. Payment Completion Status
+
+**Key Pattern**: `checked-{Month}-{PaymentName}`
+
+**Format**: String "true" or "false"
+
+**Example**:
+```
+checked-Enero-Netflix: "true"
+checked-Febrero-Netflix: "false"
+```
+
+This stores whether you've marked a specific payment as completed in a specific month.
+
+### 3. Due Dates
+
+**Key Pattern**: `startDate-{Month}-{PaymentName}`
+
+**Format**: ISO 8601 date string
+
+**Example**:
+```
+startDate-Enero-Netflix: "2026-01-15T00:00:00.000Z"
+```
+
+This stores the due date you've set for each payment in each month.
+
+### 4. Payment Dates
+
+**Key Pattern**: `paymentDate-{Month}-{PaymentName}`
+
+**Format**: ISO 8601 date string
+
+**Example**:
+```
+paymentDate-Enero-Netflix: "2026-01-14T00:00:00.000Z"
+```
+
+This stores the actual date when you made the payment (only set if you mark the payment as complete and enter a payment date).
+
+## How Data Persistence Works
+
+### Initial Load
+
+When you first open Pagosapp:
+
+1. The app checks for existing `items` in localStorage
+2. If found, it loads your payment list
+3. If not found, it loads from default constants (if any)
+
+### Automatic Saving
+
+The application automatically saves changes:
+
+- **Payment list changes**: Saved immediately when you add a new payment
+- **Completion status**: Saved when you toggle the completion switch
+- **Due dates**: Saved when you select a date in the date picker
+- **Payment dates**: Saved when you set the actual payment date
+
+<Note>
+No manual save action is required. All changes are persisted automatically to localStorage.
+</Note>
+
+## Storage Scope and Limits
+
+### Browser-Specific
+
+localStorage is specific to:
+- **Browser**: Data in Chrome won't appear in Firefox
+- **Domain**: Data is isolated to the domain where Pagosapp is hosted
+- **Profile**: Different browser profiles have separate storage
+
+### Storage Limits
+
+Most browsers allow:
+- **Size**: ~5-10 MB of localStorage per domain
+- **Capacity**: Sufficient for thousands of payments and tracking data
+
+<Warning>
+Pagosapp's data usage is minimal, but if you have many payments tracked across many months for multiple years, you may eventually approach browser limits.
+</Warning>
+
+## Viewing Your Stored Data
+
+To inspect your localStorage data:
+
+<Steps>
+  <Step title="Open Developer Tools">
+    Press F12 or right-click and select "Inspect"
+  </Step>
+  <Step title="Navigate to Storage">
+    Go to the "Application" tab (Chrome) or "Storage" tab (Firefox)
+  </Step>
+  <Step title="View Local Storage">
+    Expand "Local Storage" and select your domain
+  </Step>
+  <Step title="Browse your data">
+    You'll see all the keys and values stored by Pagosapp
+  </Step>
+</Steps>
+
+## Resetting Your Data
+
+The application includes a **Reset** button that allows you to clear all stored data:
+
+```javascript
+localStorage.clear()
+window.location.reload()
+```
+
+This will:
+1. Delete all payment items
+2. Clear all completion statuses
+3. Remove all due dates and payment dates
+4. Reload the page with a fresh state
+
+<Warning>
+**This action cannot be undone!** Make sure to backup your data before resetting if you want to preserve it.
+</Warning>
+
+## Data Backup and Recovery
+
+### Manual Backup
+
+To backup your payment data:
+
+<Steps>
+  <Step title="Open Developer Tools">
+    Press F12 to open browser developer tools
+  </Step>
+  <Step title="Open Console">
+    Navigate to the Console tab
+  </Step>
+  <Step title="Export data">
+    Run this command:
+    ```javascript
+    JSON.stringify(localStorage)
+    ```
+  </Step>
+  <Step title="Copy the output">
+    Copy the entire JSON string and save it to a file
+  </Step>
+</Steps>
+
+### Manual Recovery
+
+To restore backed-up data:
+
+<Steps>
+  <Step title="Open Developer Tools Console">
+    Press F12 and go to Console tab
+  </Step>
+  <Step title="Restore data">
+    Run this command with your backup data:
+    ```javascript
+    const backup = { /* paste your backup JSON here */ };
+    Object.keys(backup).forEach(key => {
+      localStorage.setItem(key, backup[key]);
+    });
+    location.reload();
+    ```
+  </Step>
+</Steps>
+
+## Data Portability
+
+### Moving Between Browsers
+
+Since data is stored locally, moving to a different browser requires:
+
+1. Export data from the old browser (using backup method)
+2. Import data into the new browser (using recovery method)
+
+### Moving Between Devices
+
+To use Pagosapp on multiple devices:
+
+1. Backup data from device A
+2. Transfer the backup file to device B
+3. Restore the backup on device B
+
+<Info>
+There is no automatic sync between devices. Each device maintains its own independent localStorage.
+</Info>
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="My data disappeared after clearing browser history">
+    Some browsers clear localStorage when you clear browsing data. To prevent this:
+    - Be selective when clearing history (uncheck "site settings" or "cookies and site data")
+    - Keep regular backups of your payment data
+    - Use a browser profile dedicated to Pagosapp
+  </Accordion>
+  
+  <Accordion title="Data doesn't persist in private/incognito mode">
+    localStorage in private browsing mode is temporary and gets cleared when you close the private window. Use normal browsing mode for persistent data.
+  </Accordion>
+  
+  <Accordion title="Changes aren't saving">
+    If changes don't persist:
+    - Check that JavaScript is enabled
+    - Verify localStorage isn't disabled in browser settings
+    - Try a different browser to rule out browser-specific issues
+    - Check browser console for errors (F12)
+  </Accordion>
+  
+  <Accordion title="Can I sync data across devices?">
+    Currently, Pagosapp doesn't include built-in sync functionality. You would need to manually export and import data between devices using the backup/recovery methods.
+  </Accordion>
+  
+  <Accordion title="How much data can I store?">
+    localStorage typically allows 5-10 MB per domain. Each payment item uses minimal space (around 50-100 bytes), and tracking data per month per payment adds another 50-200 bytes. You can easily track hundreds of payments across multiple years.
+  </Accordion>
+</AccordionGroup>
+
+## Security Considerations
+
+<Card title="Local Security" icon="shield">
+  localStorage data is accessible to any JavaScript running on the same domain. Since Pagosapp runs entirely in your browser:
+  - No data transmission to servers
+  - No account or authentication needed
+  - Data only accessible if someone has physical access to your device
+  - Browser security updates protect your stored data
+</Card>
+
+<Card title="Data Privacy" icon="lock">
+  Your payment information never leaves your device. This provides:
+  - Complete privacy from third parties
+  - No risk of data breaches from server hacks
+  - No tracking or analytics on your payment habits
+  - Full control over your own data
+</Card>
+
+## Best Practices
+
+<CheckIcon /> **Regular Backups**: Export your data monthly, especially before browser updates
+
+<CheckIcon /> **Test Recovery**: Periodically test your backup restoration process
+
+<CheckIcon /> **Multiple Backups**: Keep backups in multiple locations (cloud storage, external drive)
+
+<CheckIcon /> **Named Backups**: Include dates in backup filenames (e.g., `pagosapp-backup-2026-03-11.json`)
+
+<CheckIcon /> **Before Reset**: Always backup before using the Reset button
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Managing Payments" icon="list-check" href="/guide/managing-payments">
+    Learn how to add and track payments
+  </Card>
+  <Card title="Payment Categories" icon="tags" href="/guide/payment-categories">
+    Understand payment type differences
+  </Card>
+</CardGroup>

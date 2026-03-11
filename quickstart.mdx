@@ -1,80 +1,553 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart Guide
+description: Get up and running with Pagosapp in minutes - from installation to tracking your first payment
 ---
 
-## Get started in three steps
+# Quickstart Guide
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through setting up Pagosapp and creating your first payment tracking system. By the end, you'll have a fully functional payment management dashboard.
 
-### Step 1: Set up your local environment
+## Prerequisites
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+Before getting started, ensure you have:
 
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+- **Node.js** (version 14 or higher)
+- **npm** or **yarn** package manager
+- A modern web browser (Chrome, Firefox, Safari, or Edge)
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Check your Node.js version by running `node --version` in your terminal.
 </Note>
+
+## Installation
+
+<Steps>
+  <Step title="Clone the Repository">
+    First, clone the Pagosapp repository to your local machine:
+    
+    ```bash
+    git clone https://github.com/Sagthy/appPagos.git
+    cd appPagos
+    ```
+    
+    This creates a local copy of the project and navigates into the project directory.
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required packages using npm:
+    
+    ```bash
+    npm install
+    ```
+    
+    This installs:
+    - React 18.2 and React DOM
+    - Chakra UI component library
+    - date-fns for date utilities
+    - react-datepicker for date selection
+    - Vite for development and building
+    - All other required dependencies
+    
+    <Note>
+      Installation typically takes 1-2 minutes depending on your internet connection.
+    </Note>
+  </Step>
+
+  <Step title="Start the Development Server">
+    Launch the application in development mode:
+    
+    ```bash
+    npm run dev
+    ```
+    
+    Vite will start the development server and display the local URL:
+    
+    ```bash
+    VITE v5.1.0  ready in 300 ms
+    
+    ➜  Local:   http://localhost:5173/
+    ➜  Network: use --host to expose
+    ```
+    
+    Open the displayed URL in your browser to access Pagosapp.
+  </Step>
+
+  <Step title="Verify Installation">
+    You should see the Pagosapp interface with:
+    - A header displaying "PAGOS PENDIENTES" (Pending Payments)
+    - Three month columns showing the current and adjacent months
+    - Default payment items already configured
+    - Navigation buttons ("Anterior" and "Siguiente") to browse months
+    
+    <Warning>
+      If you see errors, ensure all dependencies installed correctly and that port 5173 is available.
+    </Warning>
+  </Step>
+</Steps>
+
+## Understanding the Interface
+
+Before creating your first payment, let's understand the main components:
+
+### Month View
+
+The interface displays three months at a time, allowing you to see your payment schedule across multiple periods:
+
+```jsx
+// The app shows 3 consecutive months
+const showedMonths = meses.slice(indiceInicio, indiceInicio + 3)
+```
+
+### Payment Item Colors
+
+Each payment item is color-coded for quick status recognition:
+
+- **Green** - Payment completed
+- **Orange** - Due within 3 days (urgent)
+- **Red** - Overdue
+- **Gray** - Not urgent or no due date set
+
+### Navigation Controls
+
+- **Anterior** (Previous) - View earlier months
+- **Siguiente** (Next) - View later months
+- **+** Button (top center) - Add new payment item
+- **Reset** Button (bottom) - Clear all data and start fresh
+
+## Creating Your First Payment
+
+<Steps>
+  <Step title="Open the Add Payment Modal">
+    Click the red **+** button at the top of the screen to open the "Add New Item" modal:
+    
+    ```jsx
+    <IconButton 
+      aria-label='Add Items' 
+      icon={<AddIcon />} 
+      onClick={onOpen} 
+    />
+    ```
+  </Step>
+
+  <Step title="Enter Payment Details">
+    In the modal, you'll see two fields:
+    
+    **Payment Name**
+    ```jsx
+    <Input
+      type='text'
+      placeholder='Enter payment name'
+      value={nombre}
+      onChange={(e) => setName(e.target.value)}
+    />
+    ```
+    
+    Enter a descriptive name like:
+    - "Netflix Subscription"
+    - "Electric Bill"
+    - "Car Insurance"
+    - "Property Tax"
+    
+    **Select Months**
+    
+    Click the "Selecciona los meses" (Select Months) button to choose:
+    - **Mensual** - For recurring monthly payments
+    - **Specific Months** - For one-time or irregular payments
+    
+    <Note>
+      Selecting "Mensual" automatically disables individual month selection since the payment appears every month.
+    </Note>
+  </Step>
+
+  <Step title="Choose Payment Type">
+    Decide between two payment types:
+    
+    **Monthly Recurring Payment**
+    
+    For subscriptions or bills that occur every month:
+    ```javascript
+    {
+      nombre: 'Netflix',
+      mensual: true,
+      meses: []  // Empty array for monthly payments
+    }
+    ```
+    
+    **Specific Month Payment**
+    
+    For annual or quarterly payments:
+    ```javascript
+    {
+      nombre: 'Car Insurance',
+      mensual: false,
+      meses: ['Marzo', 'Septiembre']  // Twice a year
+    }
+    ```
+  </Step>
+
+  <Step title="Save the Payment">
+    Click the **Guardar** (Save) button. The modal validates your input:
+    
+    ```javascript
+    if (!nombre.trim()) {
+      setError('El nombre no puede estar vacío.')
+      return
+    }
+    
+    if (meses.length === 0) {
+      setError('Debes seleccionar al menos un mes.')
+      return
+    }
+    ```
+    
+    Your new payment item will appear in the appropriate month columns.
+  </Step>
+</Steps>
+
+## Setting a Due Date
+
+<Steps>
+  <Step title="Locate the Payment Item">
+    Find your payment in the month view. Each payment displays:
+    - Payment name
+    - Status toggle switch
+    - Pencil icon for date editing
+  </Step>
+
+  <Step title="Open the Date Picker">
+    Click the pencil icon (📝) next to the payment name:
+    
+    ```jsx
+    <button onClick={() => setOpenDatePicker(!openDatePicker)}>
+      <FontAwesomeIcon icon={faPencilAlt} />
+    </button>
+    ```
+    
+    A calendar interface will appear.
+  </Step>
+
+  <Step title="Select the Due Date">
+    Choose the date when the payment is due. The date picker uses react-datepicker:
+    
+    ```jsx
+    <DatePickerElement
+      startDate={startDate}
+      handleDateChange={handleDateChange}
+      openDatePicker={openDatePicker}
+    />
+    ```
+    
+    The selected date is stored in localStorage:
+    ```javascript
+    localStorage.setItem(`startDate-${mes}-${pago.nombre}`, date.toISOString())
+    ```
+  </Step>
+
+  <Step title="View Due Date Status">
+    After setting a due date, the payment item will display:
+    - Days remaining until due date
+    - Color-coded status indicator
+    
+    The app calculates the time difference:
+    ```javascript
+    export const calculateDateDifference = (startDate) => {
+      const now = new Date()
+      const start = new Date(startDate)
+      const diffTime = start - now
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays
+    }
+    ```
+  </Step>
+</Steps>
+
+## Marking Payments as Paid
+
+<Steps>
+  <Step title="Toggle Payment Status">
+    Each payment item has a switch component that toggles between paid/unpaid:
+    
+    ```jsx
+    <SwitchElement 
+      checked={checked} 
+      handleChange={handleChange} 
+    />
+    ```
+    
+    Click the switch to mark the payment as complete. The status is immediately saved:
+    ```javascript
+    const handleChange = (checked) => {
+      setChecked(checked)
+      localStorage.setItem(`checked-${mes}-${pago.nombre}`, checked)
+    }
+    ```
+  </Step>
+
+  <Step title="Record Payment Date">
+    After marking a payment as paid, click on the payment item to open the details modal.
+    
+    In the modal, you'll see:
+    - Due date (if set)
+    - Payment date field (appears when payment is marked as paid)
+    
+    Click the pencil icon next to "Fecha de pago" (Payment Date) to record when you actually made the payment:
+    
+    ```jsx
+    {checked && (
+      <Flex gap='0.3rem'>
+        <p>Fecha de pago: {paymentDate ? paymentDate.toLocaleDateString() : 'No ingresada'}</p>
+        <button onClick={() => setOpenDatePicker(!openDatePicker)}>
+          <FontAwesomeIcon icon={faPencilAlt} />
+        </button>
+      </Flex>
+    )}
+    ```
+  </Step>
+
+  <Step title="Visual Confirmation">
+    When marked as paid, the payment item turns **green**, providing immediate visual confirmation:
+    
+    ```javascript
+    if (checked) {
+      itemStyle = 'item-green'
+    }
+    ```
+  </Step>
+</Steps>
+
+## Navigating Between Months
+
+Pagosapp displays three months at a time. Navigate through the year:
+
+```jsx
+const handleNextClick = () => {
+  if (indiceInicio + 1 < meses.length - 2) {
+    setIndiceInicio(indiceInicio + 1)
+  }
+}
+
+const handlePreviousClick = () => {
+  if (indiceInicio - 1 >= 0) {
+    setIndiceInicio(indiceInicio - 1)
+  }
+}
+```
+
+<Note>
+  The app starts by displaying the current month and the surrounding months, making it easy to see your immediate payment obligations.
+</Note>
+
+## Viewing Payment Details
+
+Click any payment item to open a detailed modal showing:
+
+- **Payment name**
+- **Due date** (Fecha de vencimiento)
+- **Payment date** (Fecha de pago) - only visible when marked as paid
+
+```jsx
+<PaymentModal 
+  isOpen={isOpen} 
+  onClose={onClose} 
+  paymentInfo={pago}
+  fechaVencimiento={startDate}
+  mes={mes}
+  checked={checked}
+/>
+```
+
+## Data Persistence
+
+All your data is automatically saved to localStorage. The `ItemsContext` handles synchronization:
+
+```jsx
+const ItemsProvider = ({ children }) => {
+  const [items, setItems] = useState(
+    localStorage.getItem('items') 
+      ? JSON.parse(localStorage.getItem('items')) 
+      : paymentsConstants
+  )
+
+  useEffect(() => {
+    localStorage.setItem('items', JSON.stringify(items))
+  }, [items])
+  
+  // ...
+}
+```
+
+Your payment data persists across:
+- Browser refreshes
+- Tab closures
+- Application restarts
+
+<Warning>
+  Clearing browser data or localStorage will delete all payment information. The app will reset to default payment items.
+</Warning>
+
+## Resetting the Application
+
+If you want to start fresh:
+
+<Steps>
+  <Step title="Locate Reset Button">
+    Scroll to the bottom of the page to find the red **Reset** button.
+  </Step>
+
+  <Step title="Clear All Data">
+    Click **Reset** to clear all payment data:
+    
+    ```javascript
+    const handleResetClick = () => {
+      localStorage.clear()
+      window.location.reload()
+    }
+    ```
+    
+    This removes:
+    - All custom payment items
+    - All due dates
+    - All payment statuses
+    - All payment dates
+    
+    The app reloads with default payment items.
+  </Step>
+</Steps>
+
+<Warning>
+  The reset action is immediate and cannot be undone. Make sure you want to delete all data before clicking.
+</Warning>
+
+## Example Workflow
+
+Here's a complete example of tracking a monthly subscription:
+
+<Steps>
+  <Step title="Add Netflix Subscription">
+    1. Click the **+** button
+    2. Enter "Netflix" as the payment name
+    3. Select **Mensual** from the months menu
+    4. Click **Guardar**
+    
+    Result: Netflix appears in all month columns
+  </Step>
+
+  <Step title="Set Due Date">
+    1. Click the pencil icon on the Netflix payment
+    2. Select the 15th of the month
+    3. Close the date picker
+    
+    Result: Netflix shows "X days" until the 15th
+  </Step>
+
+  <Step title="Monitor Status">
+    As the due date approaches:
+    - **4+ days away**: Gray (not urgent)
+    - **1-3 days away**: Orange (approaching)
+    - **Overdue**: Red (needs attention)
+  </Step>
+
+  <Step title="Mark as Paid">
+    1. Toggle the switch to mark as paid
+    2. Click the payment item
+    3. Set the actual payment date
+    4. Close the modal
+    
+    Result: Netflix turns green, indicating completion
+  </Step>
+
+  <Step title="Next Month">
+    Navigate to next month using **Siguiente**. Netflix appears again, unmarked and ready to track.
+    
+    <Note>
+      Payment status is tracked per month, so monthly payments reset each month automatically.
+    </Note>
+  </Step>
+</Steps>
+
+## Building for Production
+
+When you're ready to deploy Pagosapp:
+
+```bash
+npm run build
+```
+
+This creates an optimized production build in the `dist` directory:
+
+```bash
+vite build
+# Output:
+# dist/index.html
+# dist/assets/index-[hash].js
+# dist/assets/index-[hash].css
+```
+
+Deploy the `dist` folder to any static hosting service:
+- Vercel
+- Netlify
+- GitHub Pages
+- AWS S3
+- Any web server
+
+## Preview Production Build
+
+Test the production build locally:
+
+```bash
+npm run preview
+```
+
+This serves the built application using Vite's preview server.
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 5173 is occupied:
+
+```bash
+# Vite will automatically try the next available port
+# Or specify a custom port:
+npm run dev -- --port 3000
+```
+
+### Data Not Persisting
+
+Check that localStorage is enabled in your browser:
+
+```javascript
+// Test localStorage availability
+try {
+  localStorage.setItem('test', 'test')
+  localStorage.removeItem('test')
+  console.log('localStorage is available')
+} catch (e) {
+  console.error('localStorage is not available')
+}
+```
+
+### Dates Not Displaying Correctly
+
+Ensure your system date is set correctly. The app uses local system time for all date calculations.
+
+## Next Steps
+
+Now that you have Pagosapp running:
+
+1. **Add your real payments** - Replace default items with your actual bills and subscriptions
+2. **Set due dates** - Configure when each payment is due
+3. **Establish a routine** - Check Pagosapp daily or weekly to stay on top of payments
+4. **Customize** - Explore the source code to add custom features for your needs
+
+<Note>
+  Consider setting Pagosapp as your browser's new tab page or bookmarking it for quick access.
+</Note>
+
+## Support & Resources
+
+- **GitHub Repository**: [github.com/Sagthy/appPagos](https://github.com/Sagthy/appPagos)
+- **Report Issues**: [Open an issue](https://github.com/Sagthy/appPagos/issues)
+- **Contribute**: Fork the repository and submit pull requests
+
+You're now ready to track all your payments efficiently with Pagosapp!

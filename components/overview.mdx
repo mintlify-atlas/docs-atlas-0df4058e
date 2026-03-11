@@ -1,0 +1,231 @@
+---
+title: 'Components Overview'
+description: 'Explore the complete component library used in Pagosapp'
+---
+
+# Components Overview
+
+Pagosapp's component library is built with React and Chakra UI, providing a modular and reusable architecture for managing payment tracking. The components are organized into categories based on their functionality.
+
+## Component Categories
+
+<CardGroup cols={2}>
+  <Card title="Core Components" icon="cube" href="/components/core">
+    Main building blocks including payment items, month views, and headers
+  </Card>
+  
+  <Card title="Form Elements" icon="list-check" href="/components/form-elements">
+    Interactive form controls like date pickers, switches, and inputs
+  </Card>
+  
+  <Card title="Modals" icon="window-maximize" href="/components/modals">
+    Dialog components for adding payments and viewing payment details
+  </Card>
+  
+  <Card title="Layout Components" icon="table-cells" href="/components/layout">
+    Structural components for organizing the application interface
+  </Card>
+</CardGroup>
+
+## Component Library
+
+### Core Components
+
+These are the primary components that form the backbone of Pagosapp's payment management interface.
+
+#### HomeHeader
+**Location:** `src/components/HomeHeader.jsx`
+
+The main header component displayed at the top of the application. It includes the application title and a floating action button for adding new payment items.
+
+**Features:**
+- Displays "PAGOS PENDIENTES" heading
+- Add button to open the new item modal
+- Responsive design with Chakra UI
+
+#### Pago
+**Location:** `src/components/Pago.jsx`
+
+Represents an individual payment item with full interactive functionality.
+
+**Features:**
+- Visual status indicators (color-coded by payment status)
+- Toggle switch for marking payments as complete
+- Inline date picker for setting due dates
+- Click to view detailed payment information
+- Automatic color coding:
+  - Green: Payment completed
+  - Red: Payment overdue
+  - Orange: Payment due within 3 days
+  - Gray: Payment due in more than 3 days
+
+#### Mes
+**Location:** `src/components/Mes.jsx`
+
+Renders all payments for a specific month, grouping related payment items together.
+
+**Features:**
+- Displays month name as heading
+- Lists all payments associated with that month
+- Filters payments based on monthly recurrence or specific month assignment
+
+### Form Elements
+
+Interactive input components that handle user interactions and data entry.
+
+#### DatePickerElement
+**Location:** `src/components/DatePickerElement.jsx`
+
+A wrapper component for the React DatePicker library with custom styling.
+
+**Props:**
+- `startDate`: Currently selected date
+- `handleDateChange`: Callback for date changes
+- `openDatePicker`: Boolean controlling visibility
+- `setOpenDatePicker`: Function to toggle picker visibility
+
+**Features:**
+- Custom calendar styling
+- Click-outside to close
+- Positioned absolutely for overlay functionality
+
+#### SwitchElement
+**Location:** `src/components/SwitchElement.jsx`
+
+A toggle switch component for marking payments as paid or unpaid.
+
+**Props:**
+- `checked`: Current state of the switch
+- `handleChange`: Callback when switch is toggled
+
+**Features:**
+- Uses react-switch library
+- Accessible with proper ARIA labels
+- Visually hidden label for screen readers
+
+#### StartDateElement
+**Location:** `src/components/StartDateElement.jsx`
+
+Displays the due date for unpaid payments in a localized format.
+
+**Props:**
+- `checked`: Payment completion status
+- `startDate`: Due date to display
+
+**Features:**
+- Conditionally renders based on payment status
+- Formats date using locale settings
+- Only shows for unchecked (unpaid) items
+
+### Modal Components
+
+Dialog components that provide focused interfaces for specific tasks.
+
+#### AddNewItemModal
+**Location:** `src/components/modals/AddNewItemModal.jsx`
+
+Modal dialog for creating new payment items with month selection.
+
+**Features:**
+- Form validation for required fields
+- Month selection with checkboxes
+- Option for monthly recurring payments
+- Disables individual month selection when "Mensual" is selected
+- Error messaging for incomplete forms
+- Integrates with ItemsContext for state management
+
+**Form Fields:**
+- Payment name (text input)
+- Month selection (multi-select with checkboxes)
+- Monthly recurring option
+
+#### PaymentModal
+**Location:** `src/components/modals/PaymentModal.jsx`
+
+Modal dialog displaying detailed payment information and allowing payment date entry.
+
+**Features:**
+- Shows payment name and due date
+- Displays payment date for completed payments
+- Inline date picker for setting actual payment date
+- Read-only view for unpaid items
+- Edit capability for paid items
+
+**Displayed Information:**
+- Payment name
+- Due date (fecha de vencimiento)
+- Payment date (fecha de pago) - only for completed payments
+
+## Component Dependencies
+
+### External Libraries
+
+- **Chakra UI**: Primary UI component library
+  - Modal, Button, Input, Checkbox, Menu components
+  - Layout components (Flex, Box)
+  - Icons (AddIcon)
+  
+- **react-datepicker**: Date selection functionality
+  
+- **react-switch**: Toggle switch component
+  
+- **FontAwesome**: Icon library (faPencilAlt for edit actions)
+
+### Internal Dependencies
+
+- **usePago Hook**: Custom hook managing payment state and interactions
+- **ItemsContext**: Context provider for global payment state management
+
+## Styling Approach
+
+Components use a combination of:
+- **Chakra UI props**: For layout and theming
+- **Custom CSS files**: Component-specific styles
+  - `DatePicker.css`
+  - `HomeHeader.css`
+  - `Pago.css`
+
+## Component Architecture
+
+```
+src/components/
+├── HomeHeader.jsx          # Main application header
+├── Mes.jsx                 # Month grouping component
+├── Pago.jsx                # Individual payment item
+├── DatePickerElement.jsx   # Date picker wrapper
+├── StartDateElement.jsx    # Due date display
+├── SwitchElement.jsx       # Toggle switch
+└── modals/
+    ├── AddNewItemModal.jsx # New payment creation
+    └── PaymentModal.jsx    # Payment details view
+```
+
+## Best Practices
+
+When working with Pagosapp components:
+
+1. **State Management**: Use the ItemsContext for payment data
+2. **Date Handling**: Always use Date objects for consistency
+3. **Accessibility**: Maintain ARIA labels and keyboard navigation
+4. **Styling**: Follow Chakra UI theming conventions
+5. **Prop Validation**: Components use prop-types (disabled via eslint comments)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Core Components" icon="cube" href="/components/core">
+    Learn about Pago, Mes, and HomeHeader components
+  </Card>
+  
+  <Card title="Form Elements" icon="list-check" href="/components/form-elements">
+    Explore interactive input components
+  </Card>
+  
+  <Card title="Modals" icon="window-maximize" href="/components/modals">
+    Understand modal dialogs and their usage
+  </Card>
+  
+  <Card title="Hooks" icon="code" href="/hooks/overview">
+    Learn about custom hooks like usePago
+  </Card>
+</CardGroup>

@@ -1,0 +1,187 @@
+---
+title: Introduction
+description: Welcome to Pagosapp - A modern payment tracking and management application built with React
+---
+
+# Welcome to Pagosapp
+
+Pagosapp is a lightweight, browser-based payment management application designed to help you track and organize your pending payments throughout the year. Built with modern web technologies, it provides an intuitive interface for managing both monthly recurring payments and one-time payments scheduled for specific months.
+
+<Note>
+  All your payment data is stored locally in your browser using localStorage, ensuring your financial information stays private and secure on your device.
+</Note>
+
+## What is Pagosapp?
+
+Pagosapp simplifies the process of tracking payment due dates and statuses. Whether you're managing utility bills, subscriptions, insurance payments, or annual taxes, Pagosapp provides visual indicators and date tracking to help you stay on top of your financial obligations.
+
+### Key Features
+
+<CardGroup cols={2}>
+  <Card title="Visual Payment Status" icon="palette">
+    Color-coded payment items indicate urgency: green for paid, orange for approaching deadlines, red for overdue, and gray for payments not yet due.
+  </Card>
+  
+  <Card title="Flexible Scheduling" icon="calendar">
+    Support for both monthly recurring payments and one-time payments scheduled for specific months throughout the year.
+  </Card>
+  
+  <Card title="Due Date Tracking" icon="clock">
+    Set and track due dates for each payment with visual countdown indicators showing days remaining.
+  </Card>
+  
+  <Card title="Payment History" icon="check">
+    Mark payments as complete and record actual payment dates to maintain an accurate payment history.
+  </Card>
+</CardGroup>
+
+## Technology Stack
+
+Pagosapp is built using modern, efficient web technologies:
+
+- **React 18.2** - Modern UI with hooks-based architecture
+- **Vite** - Lightning-fast build tool and development server
+- **Chakra UI 2.8** - Accessible, component-based design system
+- **date-fns** - Lightweight date manipulation library
+- **react-datepicker** - Intuitive date selection interface
+- **localStorage** - Browser-based data persistence
+
+## Core Architecture
+
+The application follows React best practices with a component-based architecture:
+
+### State Management
+
+```jsx
+// ItemsContext provides global state for payment items
+import { useItems } from './states/ItemsContext'
+
+const { items, addItem, removeItem } = useItems()
+```
+
+The `ItemsContext` manages all payment items with automatic localStorage synchronization, ensuring your data persists across browser sessions.
+
+### Custom Hooks
+
+**usePago Hook** - Encapsulates all payment-related logic:
+
+```javascript
+const {
+  checked,        // Payment completion status
+  startDate,      // Due date
+  paymentDate,    // Actual payment date
+  dateDifference, // Days until due
+  handleChange,   // Toggle payment status
+  handleDateChange // Update due date
+} = usePago(pago, mes)
+```
+
+### Component Structure
+
+```
+App.jsx                    # Main application container
+├── HomeHeader.jsx         # App title and add payment button
+├── Mes.jsx               # Month container component
+│   └── Pago.jsx          # Individual payment item
+│       ├── SwitchElement.jsx      # Payment status toggle
+│       ├── DatePickerElement.jsx  # Due date selector
+│       └── StartDateElement.jsx   # Due date display
+└── Modals/
+    ├── AddNewItemModal.jsx   # Create new payment
+    └── PaymentModal.jsx      # View payment details
+```
+
+## Data Model
+
+Payments in Pagosapp follow this structure:
+
+```javascript
+{
+  nombre: 'Netflix',        // Payment name
+  mensual: true,           // Recurring monthly payment
+  meses: []                // Specific months (if not monthly)
+}
+
+// Example: One-time payment
+{
+  nombre: 'Patente',
+  mensual: false,
+  meses: ['Enero']         // Only appears in January
+}
+
+// Example: Quarterly payment
+{
+  nombre: 'Contribución Mdeo',
+  mensual: false,
+  meses: ['Marzo', 'Julio', 'Noviembre']
+}
+```
+
+## Payment Status System
+
+Pagosapp uses an intelligent color-coding system to indicate payment urgency:
+
+<CardGroup cols={2}>
+  <Card title="Green - Paid" icon="circle-check">
+    Payment has been marked as completed
+  </Card>
+  
+  <Card title="Orange - Approaching" icon="triangle-exclamation">
+    Due date is within 3 days (urgent attention needed)
+  </Card>
+  
+  <Card title="Red - Overdue" icon="circle-exclamation">
+    Payment due date has passed
+  </Card>
+  
+  <Card title="Gray - Not Due" icon="circle">
+    No due date set or due date is more than 3 days away
+  </Card>
+</CardGroup>
+
+The status calculation happens in the `Pago` component:
+
+```jsx
+let itemStyle = ''
+if (checked) {
+  itemStyle = 'item-green'          // Paid
+} else if (!startDate || dateDifference > 3) {
+  itemStyle = 'item-gray'           // Not urgent
+} else if (dateDifference < 0) {
+  itemStyle = 'item-red'            // Overdue
+} else if (dateDifference <= 3) {
+  itemStyle = 'item-orange'         // Approaching deadline
+}
+```
+
+## Use Cases
+
+Pagosapp is perfect for:
+
+- **Personal Finance Management** - Track household bills and subscriptions
+- **Small Business Expenses** - Monitor recurring vendor payments and licenses
+- **Freelancers** - Manage tax payments, professional association dues, and insurance
+- **Property Owners** - Track property taxes, HOA fees, and maintenance contracts
+
+## Browser Compatibility
+
+Pagosapp works in all modern browsers that support:
+- ES6+ JavaScript features
+- localStorage API
+- Modern CSS (Flexbox, Grid)
+
+<Warning>
+  Since data is stored in localStorage, clearing your browser data will delete all payment information. Consider exporting important data regularly.
+</Warning>
+
+## Privacy & Security
+
+Your financial data never leaves your device. Pagosapp:
+- ✅ Stores all data locally in your browser
+- ✅ Makes no network requests after initial load
+- ✅ Requires no account or authentication
+- ✅ Keeps your payment information completely private
+
+## Next Steps
+
+Ready to start tracking your payments? Head over to the [Quickstart Guide](/quickstart) to set up your first payment items and learn how to use all of Pagosapp's features.

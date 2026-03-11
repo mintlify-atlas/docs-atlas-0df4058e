@@ -1,0 +1,149 @@
+---
+title: 'Payment Tracking'
+description: 'Track payment status with visual indicators and manage multiple payments across different months'
+icon: 'check-circle'
+---
+
+## Overview
+
+Pagosapp provides an intuitive payment tracking system that allows you to monitor the status of all your payments at a glance. Each payment is displayed with color-coded visual indicators that reflect its current state.
+
+## Visual Status Indicators
+
+Payments are automatically color-coded based on their status and due date:
+
+<AccordionGroup>
+  <Accordion title="Green - Payment Completed" icon="circle-check" iconType="solid" color="#22c55e">
+    The payment has been marked as paid for the current month. This indicates that the payment obligation has been fulfilled.
+  </Accordion>
+
+  <Accordion title="Orange - Due Soon" icon="circle-exclamation" iconType="solid" color="#f97316">
+    The payment is due within the next 3 days. This serves as a warning to complete the payment soon to avoid being overdue.
+  </Accordion>
+
+  <Accordion title="Red - Overdue" icon="circle-xmark" iconType="solid" color="#ef4444">
+    The payment due date has passed and the payment has not been marked as completed. Immediate action is required.
+  </Accordion>
+
+  <Accordion title="Gray - No Due Date" icon="circle" iconType="regular" color="#6b7280">
+    No due date has been set for this payment, or the due date is more than 3 days away. Set a due date to enable tracking.
+  </Accordion>
+</AccordionGroup>
+
+## Status Calculation Logic
+
+The status indicator is determined by the following logic in `src/components/Pago.jsx:16-25`:
+
+```jsx
+let itemStyle = ''
+if (checked) {
+  itemStyle = 'item-green'
+} else if (!startDate || dateDifference > 3) {
+  itemStyle = 'item-gray'
+} else if (dateDifference < 0) {
+  itemStyle = 'item-red'
+} else if (dateDifference <= 3) {
+  itemStyle = 'item-orange'
+}
+```
+
+<Note>
+The `dateDifference` is calculated in days between the current date and the due date using the `calculateDateDifference` function from `src/utils/dateUtils.js`.
+</Note>
+
+## Marking Payments as Paid
+
+To mark a payment as complete:
+
+1. Locate the payment in the current month view
+2. Toggle the switch element next to the payment name
+3. The payment will immediately turn green to indicate completion
+4. The paid status is stored in localStorage for persistence
+
+### Switch Component
+
+The switch component is implemented in `src/components/SwitchElement.jsx:5-12`:
+
+```jsx
+export function SwitchElement ({ checked, handleChange }) {
+  return (
+    <div className='switch-wrapper'>
+      <label htmlFor='switchElement' className='visually-hidden'>Switch:</label>
+      <Switch id='switchElement' onChange={handleChange} checked={checked} />
+    </div>
+  )
+}
+```
+
+## Payment State Management
+
+The payment tracking state is managed through the `usePago` hook in `src/logic/usePago.js:7-21`:
+
+```javascript
+const [checked, setChecked] = useState(
+  localStorage.getItem(`checked-${mes}-${pago.nombre}`) === 'true'
+)
+
+const handleChange = (checked) => {
+  setChecked(checked)
+  localStorage.setItem(`checked-${mes}-${pago.nombre}`, checked)
+}
+```
+
+<Info>
+Each payment's status is stored per month, allowing you to track the same recurring payment independently across different months.
+</Info>
+
+## Payment Details Modal
+
+Click on any payment to open a detailed modal that displays:
+
+- Payment name
+- Due date (fecha de vencimiento)
+- Payment date (fecha de pago) - only shown when payment is marked as complete
+
+The modal is implemented in `src/components/modals/PaymentModal.jsx` and provides additional context about each payment.
+
+## Storage and Persistence
+
+All payment statuses are automatically saved to the browser's localStorage:
+
+- **Key format**: `checked-{month}-{paymentName}`
+- **Value**: Boolean string ('true' or 'false')
+- **Persistence**: Data persists across browser sessions until explicitly cleared
+
+<Warning>
+Using the Reset button in the application will clear all localStorage data, including payment statuses and due dates.
+</Warning>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Set Due Dates First" icon="calendar">
+    Always set due dates for your payments to enable proper status tracking and visual indicators.
+  </Card>
+  
+  <Card title="Check Daily" icon="clock">
+    Review your payment dashboard daily to stay on top of upcoming due dates.
+  </Card>
+  
+  <Card title="Mark Promptly" icon="check">
+    Mark payments as complete immediately after paying to maintain accurate records.
+  </Card>
+  
+  <Card title="Use Payment Date" icon="calendar-check">
+    Record the actual payment date when marking payments complete for better tracking.
+  </Card>
+</CardGroup>
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Due Dates" icon="calendar-days" href="/features/due-dates">
+    Learn how to set and manage payment due dates
+  </Card>
+  
+  <Card title="Custom Payments" icon="plus" href="/features/custom-payments">
+    Add your own custom payments to track
+  </Card>
+</CardGroup>

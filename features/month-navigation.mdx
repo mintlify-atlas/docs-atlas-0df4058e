@@ -1,0 +1,317 @@
+---
+title: 'Month Navigation'
+description: 'Navigate through months to view and manage payments across the entire year'
+icon: 'calendar'
+---
+
+## Overview
+
+Pagosapp displays three months at a time, allowing you to view past, current, and upcoming payments simultaneously. The navigation system makes it easy to move through the year while maintaining context of your payment timeline.
+
+## Three-Month View
+
+The application displays three consecutive months side-by-side, providing a rolling view of your payment obligations:
+
+```jsx
+const showedMonths = meses.slice(indiceInicio, indiceInicio + 3)
+```
+
+<Info>
+By default, the application starts one month before the current month (or at January if current month is January), giving you visibility into recent past payments and upcoming obligations.
+</Info>
+
+## Initial Month Position
+
+The starting month is calculated in `src/App.jsx:28-30`:
+
+```javascript
+const [indiceInicio, setIndiceInicio] = useState(
+  new Date().getMonth() - 1 < 0 ? 0 : new Date().getMonth() - 1
+)
+```
+
+### Logic Breakdown
+
+- Gets current month index (0-11)
+- Subtracts 1 to show previous month
+- If result is negative (January case), defaults to 0
+- Shows three months starting from this position
+
+<CodeGroup>
+```javascript Example: March (Month 2)
+// Current month: March (index 2)
+// indiceInicio = 2 - 1 = 1
+// Displays: Febrero, Marzo, Abril (February, March, April)
+```
+
+```javascript Example: January (Month 0)
+// Current month: January (index 0)
+// indiceInicio = 0 (can't go negative)
+// Displays: Enero, Febrero, Marzo (January, February, March)
+```
+</CodeGroup>
+
+## Navigation Controls
+
+Two buttons control month navigation:
+
+### Next Button (Siguiente)
+
+Moves the view forward by one month:
+
+```javascript
+const handleNextClick = () => {
+  if (indiceInicio + 1 < meses.length - 2) {
+    setIndiceInicio(indiceInicio + 1)
+  }
+}
+```
+
+<Card title="Next Button Behavior" icon="arrow-right">
+  - Increments the starting index by 1
+  - Disabled when showing the last three months (October, November, December)
+  - Updates the view immediately
+</Card>
+
+### Previous Button (Anterior)
+
+Moves the view backward by one month:
+
+```javascript
+const handlePreviousClick = () => {
+  if (indiceInicio - 1 >= 0) {
+    setIndiceInicio(indiceInicio - 1)
+  }
+}
+```
+
+<Card title="Previous Button Behavior" icon="arrow-left">
+  - Decrements the starting index by 1
+  - Disabled when showing the first three months (January, February, March)
+  - Updates the view immediately
+</Card>
+
+## Navigation Boundaries
+
+The navigation system has built-in boundaries to prevent invalid month ranges:
+
+<Tabs>
+  <Tab title="Forward Boundary">
+    Maximum starting index is `meses.length - 2` (index 10):
+    
+    ```javascript
+    if (indiceInicio + 1 < meses.length - 2)
+    ```
+    
+    This ensures the last possible view shows:
+    - Octubre (October)
+    - Noviembre (November)
+    - Diciembre (December)
+  </Tab>
+  
+  <Tab title="Backward Boundary">
+    Minimum starting index is 0:
+    
+    ```javascript
+    if (indiceInicio - 1 >= 0)
+    ```
+    
+    This ensures the first possible view shows:
+    - Enero (January)
+    - Febrero (February)
+    - Marzo (March)
+  </Tab>
+</Tabs>
+
+## Month Display Component
+
+Each month is rendered using the `Mes` component from `src/components/Mes.jsx:6-17`:
+
+```jsx
+export function Mes ({ mes, pagos }) {
+  return (
+    <div className='mes'>
+      <h2>{mes}</h2>
+      <ul>
+        {pagos.map((pago) => (
+          (pago.mensual || pago.meses?.includes(mes)) && (
+            <Pago key={pago.nombre} pago={pago} mes={mes} />
+          )
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
+### Rendering Logic
+
+The application renders months in `src/App.jsx:64-68`:
+
+```jsx
+<section className='mesesYPagos'>
+  {showedMonths.map((mes) => (
+    <Mes key={mes} mes={mes} pagos={items} />
+  ))}
+</section>
+```
+
+<Note>
+Each month independently filters and displays only the payments relevant to that specific month, based on the payment's `mensual` property or `meses` array.
+</Note>
+
+## Navigation UI Layout
+
+The navigation buttons are positioned above the month display:
+
+```jsx
+<div className='buttonContainer'>
+  <button className='myButton' onClick={handlePreviousClick}>
+    Anterior
+  </button>
+  <button className='myButton' onClick={handleNextClick}>
+    Siguiente
+  </button>
+</div>
+```
+
+## Practical Navigation Scenarios
+
+<AccordionGroup>
+  <Accordion title="Planning Ahead" icon="calendar-days">
+    Use the Next button to look ahead at upcoming months and prepare for future payment obligations. This is especially useful at the end of a month to see what's coming.
+  </Accordion>
+
+  <Accordion title="Historical Review" icon="clock-rotate-left">
+    Use the Previous button to review past months and verify which payments were completed. Useful for reconciliation or record-keeping.
+  </Accordion>
+
+  <Accordion title="Current Context" icon="calendar-check">
+    The default view keeps the current month in the center or right position, providing context from the previous month and visibility into the next month.
+  </Accordion>
+
+  <Accordion title="Year-End Planning" icon="calendar-range">
+    Navigate to the end of the year (October-December view) to plan for year-end payments and prepare for the next year.
+  </Accordion>
+</AccordionGroup>
+
+## Understanding the Month Array
+
+The complete month array in `src/App.jsx:12-25`:
+
+```javascript
+const meses = [
+  'Enero',       // Index 0
+  'Febrero',     // Index 1
+  'Marzo',       // Index 2
+  'Abril',       // Index 3
+  'Mayo',        // Index 4
+  'Junio',       // Index 5
+  'Julio',       // Index 6
+  'Agosto',      // Index 7
+  'Septiembre',  // Index 8
+  'Octubre',     // Index 9
+  'Noviembre',   // Index 10
+  'Diciembre'    // Index 11
+]
+```
+
+## Navigation States
+
+<CardGroup cols={3}>
+  <Card title="Start of Year" icon="1">
+    **Months**: Enero, Febrero, Marzo
+    
+    **Index**: 0
+    
+    **Previous**: Disabled
+    
+    **Next**: Enabled
+  </Card>
+  
+  <Card title="Mid Year" icon="2">
+    **Example**: Mayo, Junio, Julio
+    
+    **Index**: 4
+    
+    **Previous**: Enabled
+    
+    **Next**: Enabled
+  </Card>
+  
+  <Card title="End of Year" icon="3">
+    **Months**: Octubre, Noviembre, Diciembre
+    
+    **Index**: 9
+    
+    **Previous**: Enabled
+    
+    **Next**: Disabled
+  </Card>
+</CardGroup>
+
+## Payment Filtering Per Month
+
+As you navigate, each month automatically filters payments:
+
+```jsx
+(pago.mensual || pago.meses?.includes(mes)) && (
+  <Pago key={pago.nombre} pago={pago} mes={mes} />
+)
+```
+
+- **Monthly payments** (`mensual: true`): Appear in all months
+- **Specific month payments**: Only appear in designated months
+
+<Warning>
+Payment statuses are stored per month. A payment marked as complete in March will show as incomplete in April, even if it's the same recurring payment.
+</Warning>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Regular Navigation" icon="calendar-days">
+    Navigate through months regularly to stay aware of upcoming and past payment obligations across the year.
+  </Card>
+  
+  <Card title="Start of Month Review" icon="calendar-check">
+    At the beginning of each month, navigate to view the current and next two months to plan ahead.
+  </Card>
+  
+  <Card title="End of Month Check" icon="calendar-xmark">
+    Before month-end, review the current month to ensure all payments are marked as complete.
+  </Card>
+  
+  <Card title="Quarterly Overview" icon="calendar-range">
+    Use navigation to review three-month periods for quarterly financial planning and tracking.
+  </Card>
+</CardGroup>
+
+## Keyboard Accessibility
+
+The navigation buttons are fully accessible:
+- Click with mouse
+- Tab to focus, Enter/Space to activate
+- Clear visual feedback on button state
+
+## Performance Considerations
+
+<Info>
+The three-month view is optimized for performance:
+- Only three months of data are rendered at once
+- Navigation updates are instant
+- Payment filtering happens per month automatically
+- No unnecessary re-renders when navigating
+</Info>
+
+## Related Features
+
+<CardGroup cols={2}>
+  <Card title="Payment Tracking" icon="check-circle" href="/features/payment-tracking">
+    Track payments across different months
+  </Card>
+  
+  <Card title="Due Dates" icon="calendar-days" href="/features/due-dates">
+    Manage due dates for payments in different months
+  </Card>
+</CardGroup>

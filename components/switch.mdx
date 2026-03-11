@@ -1,0 +1,404 @@
+---
+title: 'SwitchElement Component'
+description: 'Toggle switch for marking payments as paid or unpaid'
+icon: 'toggle-on'
+---
+
+## Overview
+
+The `SwitchElement` component provides a simple toggle switch interface for marking payments as paid or unpaid. It wraps the `react-switch` library with proper accessibility attributes and styling integration.
+
+## Features
+
+- **Binary State Toggle**: Simple on/off payment status control
+- **Accessibility**: Includes proper label and aria attributes
+- **Controlled Component**: Integrates with parent state management
+- **Visual Feedback**: Clear indication of paid/unpaid status
+- **Custom Styling**: Wrapped in a custom container for consistent appearance
+
+## Location
+
+```
+src/components/SwitchElement.jsx
+```
+
+## Props
+
+<ParamField path="checked" type="boolean" required>
+  The current state of the switch
+  
+  - `true`: Payment is marked as paid (switch is ON)
+  - `false`: Payment is unpaid (switch is OFF)
+  
+  This is a controlled component, so the value must be managed by the parent.
+</ParamField>
+
+<ParamField path="handleChange" type="function" required>
+  Callback function invoked when the switch is toggled
+  
+  **Signature:**
+  ```javascript
+  (checked: boolean) => void
+  ```
+  
+  Receives the new checked state as its argument.
+</ParamField>
+
+## Usage Example
+
+### Basic Implementation
+
+```jsx
+import { useState } from 'react'
+import { SwitchElement } from './components/SwitchElement'
+
+function PaymentItem() {
+  const [isPaid, setIsPaid] = useState(false)
+  
+  const handleToggle = (checked) => {
+    setIsPaid(checked)
+    console.log(`Payment is now ${checked ? 'paid' : 'unpaid'}`)
+  }
+  
+  return (
+    <div>
+      <h3>Electricity Bill</h3>
+      <SwitchElement
+        checked={isPaid}
+        handleChange={handleToggle}
+      />
+      <p>Status: {isPaid ? 'Paid ✓' : 'Pending'}</p>
+    </div>
+  )
+}
+```
+
+### Integration with usePago Hook
+
+As used in the `Pago` component:
+
+```jsx
+import { usePago } from '../logic/usePago'
+import { SwitchElement } from './SwitchElement'
+
+function Pago({ pago, mes }) {
+  const { checked, handleChange } = usePago(pago, mes)
+  
+  return (
+    <li>
+      <span>
+        {pago.nombre}
+        <SwitchElement
+          checked={checked}
+          handleChange={handleChange}
+        />
+      </span>
+    </li>
+  )
+}
+```
+
+### With localStorage Persistence
+
+```jsx
+import { useState, useEffect } from 'react'
+import { SwitchElement } from './components/SwitchElement'
+
+function PersistentPayment({ paymentId }) {
+  const [checked, setChecked] = useState(() => {
+    const saved = localStorage.getItem(`payment-${paymentId}`)
+    return saved === 'true'
+  })
+  
+  const handleChange = (newChecked) => {
+    setChecked(newChecked)
+    localStorage.setItem(`payment-${paymentId}`, newChecked)
+  }
+  
+  return (
+    <SwitchElement
+      checked={checked}
+      handleChange={handleChange}
+    />
+  )
+}
+```
+
+## Component Structure
+
+The component renders:
+
+```jsx
+<div className='switch-wrapper'>
+  <label htmlFor='switchElement' className='visually-hidden'>
+    Switch:
+  </label>
+  <Switch
+    id='switchElement'
+    onChange={handleChange}
+    checked={checked}
+  />
+</div>
+```
+
+### Wrapper Div
+
+The `switch-wrapper` class provides:
+- Consistent spacing and positioning
+- Container for the switch and its label
+- Custom styling hook point
+
+### Hidden Label
+
+The label uses `visually-hidden` class to:
+- Provide context for screen readers
+- Remain hidden from visual users
+- Maintain accessibility without affecting layout
+
+<Note>
+Ensure your CSS includes a `visually-hidden` utility class that hides content visually but keeps it accessible to screen readers.
+</Note>
+
+## Accessibility
+
+### ARIA and HTML Attributes
+
+```jsx
+<label htmlFor='switchElement' className='visually-hidden'>
+  Switch:
+</label>
+<Switch id='switchElement' onChange={handleChange} checked={checked} />
+```
+
+- **htmlFor/id connection**: Associates the label with the switch
+- **Visually hidden label**: Provides context without visual clutter
+- **Switch role**: Automatically handled by `react-switch`
+
+### Screen Reader Behavior
+
+Screen readers will announce:
+- "Switch" (from the label)
+- Current state ("on" or "off")
+- Interactive control type
+
+### Keyboard Navigation
+
+- **Space/Enter**: Toggle the switch
+- **Tab**: Focus the switch
+- Works without mouse interaction
+
+## Styling
+
+The component uses the `switch-wrapper` class for container styling.
+
+### CSS Example
+
+```css
+.switch-wrapper {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.5rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+```
+
+### react-switch Customization
+
+Customize the switch appearance by passing additional props to the `Switch` component:
+
+```jsx
+<Switch
+  id='switchElement'
+  onChange={handleChange}
+  checked={checked}
+  onColor="#86d3ff"
+  onHandleColor="#2693e6"
+  handleDiameter={30}
+  uncheckedIcon={false}
+  checkedIcon={false}
+  boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
+  activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
+  height={20}
+  width={48}
+/>
+```
+
+## Dependencies
+
+- `react-switch` - Toggle switch UI component
+
+### Installing react-switch
+
+```bash
+npm install react-switch
+```
+
+## State Management in Pagosapp
+
+In the Pagosapp context, the switch state is managed by the `usePago` hook:
+
+```javascript
+const handleChange = (checked) => {
+  setChecked(checked)
+  localStorage.setItem(`checked-${mes}-${pago.nombre}`, checked)
+}
+```
+
+This approach:
+1. Updates component state immediately
+2. Persists state to localStorage
+3. Uses a compound key (`mes` + `pago.nombre`) for unique identification
+
+See the [State Management documentation](/development/state-management) for details on the usePago hook.
+
+## Visual Status Integration
+
+The switch state affects the visual appearance of the parent `Pago` component:
+
+```javascript
+let itemStyle = ''
+if (checked) {
+  itemStyle = 'item-green'  // Payment marked as paid
+} else if (!startDate || dateDifference > 3) {
+  itemStyle = 'item-gray'
+} else if (dateDifference < 0) {
+  itemStyle = 'item-red'
+} else if (dateDifference <= 3) {
+  itemStyle = 'item-orange'
+}
+```
+
+When `checked === true`, the payment item displays with green styling to indicate completion.
+
+## Event Flow
+
+### User Interaction
+
+1. User clicks/taps the switch
+2. `react-switch` internal state changes
+3. `onChange` event fires
+4. `handleChange(newChecked)` is called
+5. Parent component updates state
+6. Component re-renders with new `checked` value
+7. Visual feedback reflects new state
+
+### State Persistence
+
+In Pagosapp:
+
+1. Switch toggled
+2. `handleChange` called via `usePago`
+3. State updated in React
+4. Value saved to localStorage
+5. Persists across page reloads
+
+## Common Patterns
+
+### List of Payments
+
+```jsx
+function PaymentList({ payments }) {
+  return (
+    <ul>
+      {payments.map(payment => {
+        const { checked, handleChange } = usePago(payment, 'Enero')
+        
+        return (
+          <li key={payment.id}>
+            <span>{payment.nombre}</span>
+            <SwitchElement
+              checked={checked}
+              handleChange={handleChange}
+            />
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+```
+
+### Controlled with Side Effects
+
+```jsx
+function PaymentWithNotification({ payment }) {
+  const [checked, setChecked] = useState(false)
+  
+  const handleChange = (newChecked) => {
+    setChecked(newChecked)
+    
+    if (newChecked) {
+      showNotification(`${payment.nombre} marked as paid!`)
+      logPaymentEvent(payment.id, 'paid')
+    }
+  }
+  
+  return (
+    <SwitchElement
+      checked={checked}
+      handleChange={handleChange}
+    />
+  )
+}
+```
+
+## Testing Considerations
+
+### Unit Test Example
+
+```jsx
+import { render, screen, fireEvent } from '@testing-library/react'
+import { SwitchElement } from './SwitchElement'
+
+test('calls handleChange when toggled', () => {
+  const handleChange = jest.fn()
+  
+  render(
+    <SwitchElement
+      checked={false}
+      handleChange={handleChange}
+    />
+  )
+  
+  const switchElement = screen.getByRole('switch')
+  fireEvent.click(switchElement)
+  
+  expect(handleChange).toHaveBeenCalledWith(true)
+})
+```
+
+## Related Components
+
+- [Pago Component](/components/pago) - Primary consumer of SwitchElement
+- [DatePickerElement](/components/date-picker) - Complementary control in Pago
+- [Mes Component](/components/mes) - Container for Pago components
+
+## react-switch Props Reference
+
+For additional customization options, see the [react-switch documentation](https://github.com/markusenglund/react-switch).
+
+Commonly used additional props:
+
+- `disabled` - Disable the switch
+- `onColor` / `offColor` - Background colors
+- `onHandleColor` / `offHandleColor` - Handle colors
+- `handleDiameter` - Size of the toggle handle
+- `checkedIcon` / `uncheckedIcon` - Custom icons
+- `className` - Additional CSS class
+
+## Source Code Reference
+
+Component implementation at `src/components/SwitchElement.jsx:5-12`
+
+Label implementation at `src/components/SwitchElement.jsx:8`
