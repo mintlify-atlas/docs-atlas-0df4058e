@@ -10,20 +10,32 @@ Pagosapp's component library is built with React and Chakra UI, providing a modu
 ## Component Categories
 
 <CardGroup cols={2}>
-  <Card title="Core Components" icon="cube" href="/components/core">
-    Main building blocks including payment items, month views, and headers
+  <Card title="Pago Component" icon="cube" href="/components/pago">
+    Individual payment item with status, toggle, and date picker
   </Card>
   
-  <Card title="Form Elements" icon="list-check" href="/components/form-elements">
-    Interactive form controls like date pickers, switches, and inputs
+  <Card title="Mes Component" icon="calendar" href="/components/mes">
+    Month container that displays payments for a specific month
   </Card>
   
-  <Card title="Modals" icon="window-maximize" href="/components/modals">
-    Dialog components for adding payments and viewing payment details
+  <Card title="Date Picker" icon="calendar-days" href="/components/date-picker">
+    Interactive date selection component for setting due dates
   </Card>
   
-  <Card title="Layout Components" icon="table-cells" href="/components/layout">
-    Structural components for organizing the application interface
+  <Card title="Switch Element" icon="toggle-on" href="/components/switch">
+    Toggle switch for marking payments as paid or unpaid
+  </Card>
+</CardGroup>
+
+## Modal Components
+
+<CardGroup cols={2}>
+  <Card title="Add New Item Modal" icon="plus" href="/components/add-new-item">
+    Modal dialog for creating new payment items
+  </Card>
+  
+  <Card title="Payment Modal" icon="window-maximize" href="/components/payment-modal">
+    Modal for viewing and editing payment details
   </Card>
 </CardGroup>
 
@@ -213,19 +225,19 @@ When working with Pagosapp components:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Core Components" icon="cube" href="/components/core">
-    Learn about Pago, Mes, and HomeHeader components
+  <Card title="Pago Component" icon="receipt" href="/components/pago">
+    Deep dive into the payment item component
   </Card>
   
-  <Card title="Form Elements" icon="list-check" href="/components/form-elements">
-    Explore interactive input components
+  <Card title="Mes Component" icon="calendar" href="/components/mes">
+    Learn about the month container component
   </Card>
   
-  <Card title="Modals" icon="window-maximize" href="/components/modals">
-    Understand modal dialogs and their usage
+  <Card title="Add New Item Modal" icon="plus" href="/components/add-new-item">
+    Understand how to create new payments
   </Card>
   
-  <Card title="Hooks" icon="code" href="/hooks/overview">
-    Learn about custom hooks like usePago
+  <Card title="State Management" icon="database" href="/development/state-management">
+    Learn about custom hooks like usePago and useItems
   </Card>
 </CardGroup>
